@@ -6,6 +6,7 @@ import { useSim } from "@/components/SimProvider";
 import { PageHeader, rupees, ScoreText } from "@/components/ui";
 import { VILLAGES } from "@/lib/data";
 import { downloadCsv, today } from "@/lib/csv";
+import MapView from "@/components/MapView";
 
 const TRUST_LINE = 70;
 const HOLD_SHARE = 0.3;
@@ -73,6 +74,18 @@ export default function FundsPage() {
           <p className="border-t border-[var(--line)] pt-4 text-[14px] text-[var(--slate)]">
             On hold until data is checked: <b className="num text-[#7d5208]">{rupees(Math.round(held))}</b>
           </p>
+          <div className="mt-6 border-t border-[var(--line)] pt-4">
+            <p className="mb-2 font-semibold">Where the money goes</p>
+            <MapView height={280} points={ranked.map((r) => ({
+              lat: r.s.village.lat, lng: r.s.village.lng,
+              radius: 7 + Math.round((r.amount / budget) * 40),
+              color: r.hold ? "#a06a0c" : "#1d2847",
+              ring: r.hold,
+              label: `${r.s.village.name}: ${rupees(Math.round(r.amount))}${r.hold ? ", part held" : ""}`,
+              href: `/village/${r.s.village.id}`,
+            }))} />
+            <p className="mt-2 text-[13px] text-[var(--slate)]">Bigger circle, bigger share. Ringed villages have money on hold.</p>
+          </div>
         </section>
 
         <section aria-labelledby="ranking">
