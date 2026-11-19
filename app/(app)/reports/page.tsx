@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { useSim } from "@/components/SimProvider";
 import { PageHeader, timeAgo } from "@/components/ui";
+import VoiceInput from "@/components/VoiceInput";
 import { SENSORS, VILLAGES, villageById } from "@/lib/data";
 import { bnDigits } from "@/lib/summary";
 import { CATEGORY_LABEL, CitizenReport, ReportCategory } from "@/lib/types";
@@ -64,6 +65,7 @@ function CitizenReports() {
   const v = villageById(villageId)!;
   const [cat, setCat] = useState<ReportCategory | null>(null);
   const [text, setText] = useState("");
+  const [audio, setAudio] = useState<string | undefined>();
   const [photo, setPhoto] = useState<string | undefined>();
   const [loc, setLoc] = useState<{ lat: number; lng: number } | null>(null);
   const [locNote, setLocNote] = useState<string | null>(null);
@@ -83,9 +85,9 @@ function CitizenReports() {
 
   function submit() {
     if (!cat) return;
-    const r = addReport({ villageId, category: cat, text: text.trim() || CATEGORY_LABEL[cat].en, photo, lat: loc?.lat, lng: loc?.lng });
+    const r = addReport({ villageId, category: cat, text: text.trim() || (audio ? L("Voice note") : CATEGORY_LABEL[cat].en), photo, audio, lat: loc?.lat, lng: loc?.lng });
     setDone(r);
-    setCat(null); setText(""); setPhoto(undefined); setLoc(null);
+    setCat(null); setText(""); setPhoto(undefined); setLoc(null); setAudio(undefined);
     if (fileRef.current) fileRef.current.value = "";
   }
 
@@ -104,6 +106,7 @@ function CitizenReports() {
               </button>
             ))}
           </div>
+          <VoiceInput lang={lang} onText={setText} onAudio={setAudio} onCategory={(c) => setCat(c)} />
           <label htmlFor="desc" className="mt-4 block text-[13px] text-[var(--slate)]">{bn ? "বিস্তারিত (ঐচ্ছিক)" : L("Details (optional)")}</label>
           <textarea id="desc" className="field mt-1" rows={3} value={text} onChange={(e) => setText(e.target.value)}
             placeholder={bn ? "যেমন: স্কুলের পাশের নলকূপে দুই সপ্তাহ জল নেই" : "For example: the handpump next to the school has had no water for two weeks"} />
@@ -148,6 +151,7 @@ function CitizenReports() {
                       <span className="text-[12px] text-[var(--slate)]">{timeAgo(r.ts)}</span>
                     </div>
                     <p className="text-[14px] text-[var(--slate)]">{r.text}</p>
+                    {r.audio && <audio controls src={r.audio} className="mt-1 h-9 max-w-full" aria-label={L("Voice note")} />}
                     <div className="mt-2 flex flex-wrap items-center gap-2"><CheckChip r={r} bn={bn} /></div>
                     <div className="mt-2"><Progress status={r.status} /></div>
                   </div>
@@ -215,6 +219,7 @@ function OfficerReports() {
               <div className="min-w-0 flex-1">
                 <p className="font-semibold">{CATEGORY_LABEL[r.category][phraseLang()]} <span className="font-normal text-[var(--slate)]">in {villageById(r.villageId)?.name}, {timeAgo(r.ts)}</span></p>
                 <p className="mt-0.5 text-[14px]">{r.text}</p>
+                {r.audio && <audio controls src={r.audio} className="mt-1 h-9 max-w-full" aria-label={L("Voice note")} />}
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                   <CheckChip r={r} bn={bn} />
                   {r.lat && r.lng && (

@@ -1396,6 +1396,54 @@ const P: Record<string, { bn: string; hi: string }> = {
  "Other ways to sign in": {
   "bn": "অন্যভাবে সাইন ইন",
   "hi": "साइन इन के अन्य तरीके"
+ },
+ "Speak your report": {
+  "bn": "মুখে বলে অভিযোগ জানান",
+  "hi": "बोलकर शिकायत करें"
+ },
+ "Speaking language": {
+  "bn": "কোন ভাষায় বলবেন",
+  "hi": "बोलने की भाषा"
+ },
+ "Tap and speak": {
+  "bn": "চাপুন ও বলুন",
+  "hi": "दबाएँ और बोलें"
+ },
+ "Stop": {
+  "bn": "থামান",
+  "hi": "रोकें"
+ },
+ "Record again": {
+  "bn": "আবার রেকর্ড করুন",
+  "hi": "फिर से रिकॉर्ड करें"
+ },
+ "Remove": {
+  "bn": "মুছুন",
+  "hi": "हटाएँ"
+ },
+ "Voice note": {
+  "bn": "ভয়েস নোট",
+  "hi": "वॉइस नोट"
+ },
+ "Your words appear in the box as you speak. The recording is attached as a voice note.": {
+  "bn": "বলার সাথে সাথে কথা বাক্সে লেখা হবে। রেকর্ডিং ভয়েস নোট হিসেবে যুক্ত হবে।",
+  "hi": "बोलते ही शब्द बॉक्स में लिखे जाएँगे। रिकॉर्डिंग वॉइस नोट के रूप में जुड़ेगी।"
+ },
+ "This browser cannot turn speech into text, but your voice note will be attached.": {
+  "bn": "এই ব্রাউজার কথাকে লেখায় বদলাতে পারে না, তবে ভয়েস নোট যুক্ত হবে।",
+  "hi": "यह ब्राउज़र बोली को लिखावट में नहीं बदल सकता, पर वॉइस नोट जुड़ जाएगा।"
+ },
+ "Microphone permission was denied. Allow the microphone in your browser settings to record.": {
+  "bn": "মাইক্রোফোনের অনুমতি দেওয়া হয়নি। রেকর্ড করতে ব্রাউজার সেটিংসে অনুমতি দিন।",
+  "hi": "माइक्रोफ़ोन की अनुमति नहीं मिली। रिकॉर्ड करने के लिए ब्राउज़र सेटिंग में अनुमति दें।"
+ },
+ "Speech to text needs internet. Your voice note is still saved.": {
+  "bn": "কথা থেকে লেখার জন্য ইন্টারনেট লাগে। ভয়েস নোট তবুও জমা আছে।",
+  "hi": "बोली से लिखावट के लिए इंटरनेट चाहिए। वॉइस नोट फिर भी सहेजा गया है।"
+ },
+ "Could not turn speech into text. Your voice note is still saved.": {
+  "bn": "কথা থেকে লেখা করা গেল না। ভয়েস নোট তবুও জমা আছে।",
+  "hi": "बोली को लिखावट में नहीं बदल सके। वॉइस नोट फिर भी सहेजा गया है।"
  }
 };
 

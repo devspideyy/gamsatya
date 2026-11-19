@@ -9,6 +9,8 @@ export interface CitizenReport {
   category: ReportCategory;
   text: string;
   photo?: string;
+  /** Voice note recorded by the villager */
+  audio?: string;
   lat?: number;
   lng?: number;
   ts: number;
