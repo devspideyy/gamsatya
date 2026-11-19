@@ -20,6 +20,12 @@ export interface Village {
   /** What the panchayat self-declared on the portal (percent) */
   selfReport: { water: number; energy: number; sanitation: number };
   story: string;
+  /** Mobile coverage at the panchayat office; decides how SOS and data travel */
+  network: "4G" | "2G";
+  /** LoRa gateway that relays this village's sensors and sirens */
+  gateway: string;
+  /** Sensor types not installed yet: those indicators fall back to the panchayat's own declaration */
+  notInstalled?: SensorType[];
 }
 
 export interface Sensor {
@@ -61,35 +67,35 @@ export const VILLAGES: Village[] = [
     population: 4120, households: 910, lat: 22.165, lng: 88.805,
     risk: 0.45, coastal: false, tankBase: 78, binBase: 38, govBase: 86,
     selfReport: { water: 90, energy: 85, sanitation: 85 },
-    story: "Honest reporting, improving after repairs last month.",
+    story: "Honest reporting, improving after repairs last month.", network: "4G", gateway: "GW-KUS-01",
   },
   {
     id: "radhaganj", name: "Radhaganj", nameBn: "রাধাগঞ্জ",
     population: 5630, households: 1240, lat: 22.14, lng: 88.84,
     risk: 0.5, coastal: false, tankBase: 64, binBase: 62, govBase: 58,
     selfReport: { water: 100, energy: 100, sanitation: 100 },
-    story: "Claims 100% on every indicator. Sensors disagree.",
+    story: "Claims 100% on every indicator. Sensors disagree.", network: "4G", gateway: "GW-RAD-01",
   },
   {
     id: "haripur-char", name: "Haripur Char", nameBn: "হরিপুর চর",
     population: 3380, households: 760, lat: 22.11, lng: 88.79,
     risk: 0.92, coastal: true, tankBase: 52, binBase: 45, govBase: 72,
     selfReport: { water: 55, energy: 80, sanitation: 65 },
-    story: "Riverside island village. High cyclone and flood risk.",
+    story: "Riverside island village. High cyclone and flood risk.", network: "2G", gateway: "GW-HAR-01",
   },
   {
     id: "nalbon", name: "Nalbon", nameBn: "নলবন",
     population: 2940, households: 640, lat: 22.19, lng: 88.86,
     risk: 0.35, coastal: false, tankBase: 70, binBase: 50, govBase: 74,
     selfReport: { water: 85, energy: 80, sanitation: 55 },
-    story: "Average village, a few slow repairs.",
+    story: "Paper-heavy: no streetlight or bin sensors yet, so those figures are only declared.", network: "2G", gateway: "GW-NAL-01", notInstalled: ["bin", "streetlight"],
   },
   {
     id: "dakshin-mathabhanga", name: "Dakshin Mathabhanga", nameBn: "দক্ষিণ মাথাভাঙা",
     population: 6210, households: 1390, lat: 22.125, lng: 88.88,
     risk: 0.8, coastal: true, tankBase: 41, binBase: 66, govBase: 66,
     selfReport: { water: 45, energy: 55, sanitation: 50 },
-    story: "Poor but honest. Largest population and high need.",
+    story: "Poor but honest. Largest population and high need.", network: "2G", gateway: "GW-DM-01",
   },
 ];
 
@@ -107,6 +113,7 @@ function offset(seed: number, i: number) {
 export const SENSORS: Sensor[] = VILLAGES.flatMap((v, vi) =>
   (Object.keys(COUNTS) as SensorType[]).flatMap((type) => {
     if (type === "river" && !v.coastal) return [];
+    if (v.notInstalled?.includes(type)) return [];
     return Array.from({ length: COUNTS[type] }, (_, i) => {
       const [dy, dx] = offset(vi + 1, i + type.length * 7);
       return {

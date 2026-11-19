@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSim } from "@/components/SimProvider";
 import { PageHeader, timeAgo } from "@/components/ui";
+import IncidentBoard from "@/components/IncidentBoard";
 import { RIVER_DANGER_M, VILLAGES, villageById } from "@/lib/data";
 import { speak } from "@/lib/speak";
 import { ALERT_TEMPLATES, AlertKind, VillageAlert } from "@/lib/types";
@@ -138,6 +139,7 @@ function OfficerAlerts() {
   return (
     <div className="space-y-5">
       <PageHeader title="Disaster alerts" lede={`Bengali voice alerts travel to ${VILLAGES.length * 3} village sirens over LoRa radio, so they still work when mobile networks fail.`} />
+      <IncidentBoard villageFilter={own ? villageId : undefined} />
 
       <div className="grid gap-x-12 gap-y-10 lg:grid-cols-[1fr_1.2fr]">
         <section aria-labelledby="gauges">

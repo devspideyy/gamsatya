@@ -4,6 +4,17 @@ import {
 
 export const DAY = 86_400_000;
 
+export type Confidence = "sensor" | "citizen" | "declared" | "unverified";
+
+/** How much each kind of evidence counts. A village that only fills in forms cannot score high. */
+export const CONFIDENCE_WEIGHT: Record<Confidence, number> = { sensor: 1, citizen: 0.75, declared: 0.45, unverified: 0.45 };
+export const CONFIDENCE_LABEL: Record<Confidence, { en: string; bn: string; hi: string }> = {
+  sensor: { en: "Sensor", bn: "সেন্সর", hi: "सेंसर" },
+  citizen: { en: "Citizen", bn: "নাগরিক", hi: "नागरिक" },
+  declared: { en: "Declared only", bn: "শুধু ঘোষিত", hi: "केवल घोषित" },
+  unverified: { en: "Unverified", bn: "অযাচাই", hi: "असत्यापित" },
+};
+
 export interface Reading {
   sensor: Sensor;
   value: number;
@@ -12,6 +23,8 @@ export interface Reading {
   warn: boolean;
   source: "simulated" | "device";
   ts: number;
+  /** Node has lost power or signal; its last value is not trusted */
+  offline?: boolean;
 }
 
 export interface AssetStatus {
@@ -34,6 +47,10 @@ export interface VillageSnapshot {
   village: Village;
   /** What the panchayat declared this month (self-reported, not measured) */
   declared: Declaration;
+  /** Where each indicator's number comes from */
+  confidence: Record<Indicator, Confidence>;
+  /** Points each indicator actually adds to the score after confidence weighting */
+  points: Record<Indicator, number>;
   readings: Reading[];
   indicators: Record<Indicator, number>;
   score: number;
@@ -51,6 +68,7 @@ export interface SimOptions {
   reportResolution?: Record<string, number | undefined>;
   brokenLedger?: Set<string>;
   declarations?: Record<string, Declaration>;
+  offline?: Set<string>;
 }
 
 /** Deterministic pseudo-random 0..1 from a string + number */
@@ -117,7 +135,8 @@ export function readingsFor(v: Village, at: number, daysAgo: number, opts: SimOp
     const o = opts.overrides?.[s.id];
     const useDevice = daysAgo === 0 && o && at - o.ts < 120_000;
     const value = useDevice ? o.value : simulateValue(s, v, at, daysAgo, opts.surge?.[v.id] ?? 0);
-    return { sensor: s, value, unit: UNITS[s.type], ...judge(s.type, value), source: useDevice ? "device" : "simulated", ts: useDevice ? o.ts : at };
+    const off = daysAgo === 0 && !useDevice && opts.offline?.has(s.id);
+    return { sensor: s, value, unit: UNITS[s.type], ...judge(s.type, value), source: useDevice ? "device" : "simulated", ts: useDevice ? o.ts : at, offline: off || undefined };
   });
 }
 
@@ -133,8 +152,12 @@ const pct = (rs: Reading[]) => (rs.length ? (100 * rs.filter((r) => r.ok).length
 
 export const WEIGHTS: Record<Indicator, number> = { water: 0.3, energy: 0.2, sanitation: 0.2, assets: 0.15, governance: 0.15 };
 
-export function computeIndicators(v: Village, readings: Reading[], assets: AssetStatus[], resolution?: number) {
-  const of = (t: SensorType) => readings.filter((r) => r.sensor.type === t);
+export function computeIndicators(
+  v: Village, readings: Reading[], assets: AssetStatus[], resolution?: number,
+  declared: Declaration = v.selfReport, ledgerBroken = false,
+) {
+  const live = readings.filter((r) => !r.offline);
+  const of = (t: SensorType) => live.filter((r) => r.sensor.type === t);
   const tanks = of("tank"), pumps = of("handpump"), lights = of("streetlight"), bins = of("bin");
   const water = 0.5 * Math.min(100, avg(tanks.map((r) => r.value)) * 1.15) + 0.5 * pct(pumps);
   const energy = pct(lights);
@@ -145,24 +168,44 @@ export function computeIndicators(v: Village, readings: Reading[], assets: Asset
     water: Math.round(water), energy: Math.round(energy), sanitation: Math.round(sanitation),
     assets: Math.round(assetScore), governance: Math.round(governance),
   };
-  const score = Math.round((Object.keys(WEIGHTS) as Indicator[]).reduce((s, k) => s + ind[k] * WEIGHTS[k], 0));
-  return { indicators: ind, score };
+  // Confidence: sensor-measured, citizen-backed, or only declared on paper
+  const all = (t: SensorType) => readings.filter((r) => r.sensor.type === t);
+  const sourceFor = (types: SensorType[], k: keyof Declaration): Confidence => {
+    const installed = types.flatMap(all);
+    if (!installed.length) { ind[k] = declared[k]; return "declared"; }
+    if (installed.every((r) => r.offline)) { ind[k] = declared[k]; return "unverified"; }
+    return ledgerBroken ? "unverified" : "sensor";
+  };
+  const confidence: Record<Indicator, Confidence> = {
+    water: sourceFor(["tank", "handpump"], "water"),
+    energy: sourceFor(["streetlight"], "energy"),
+    sanitation: sourceFor(["bin"], "sanitation"),
+    assets: ledgerBroken ? "unverified" : "sensor",
+    governance: "citizen",
+  };
+  const points = {} as Record<Indicator, number>;
+  for (const k of Object.keys(WEIGHTS) as Indicator[]) points[k] = Math.round(ind[k] * WEIGHTS[k] * CONFIDENCE_WEIGHT[confidence[k]] * 10) / 10;
+  const score = Math.round(Object.values(points).reduce((a, b) => a + b, 0));
+  return { indicators: ind, score, confidence, points };
 }
 
 export function snapshot(v: Village, at: number, opts: SimOptions = {}): VillageSnapshot {
   const readings = readingsFor(v, at, 0, opts);
   const assets = ASSETS.filter((a) => a.villageId === v.id).map(assetStatus);
-  const { indicators, score } = computeIndicators(v, readings, assets, opts.reportResolution?.[v.id]);
   const declared = opts.declarations?.[v.id] ?? v.selfReport;
+  const broken = !!opts.brokenLedger?.has(v.id);
+  const { indicators, score, confidence, points } = computeIndicators(v, readings, assets, opts.reportResolution?.[v.id], declared, broken);
   const mismatches: Mismatch[] = (["water", "energy", "sanitation"] as const)
-    .filter((k) => declared[k] - indicators[k] > 15)
+    .filter((k) => confidence[k] === "sensor" && declared[k] - indicators[k] > 15)
     .map((k) => ({ indicator: k, claimed: declared[k], measured: indicators[k] }));
-  const coverage = 80; // 4 of 5 indicators come from sensors; governance comes from citizen reports
-  let trust = 100 - mismatches.length * 14 - (opts.brokenLedger?.has(v.id) ? 35 : 0);
+  // Share of the score's weight that rests on sensors
+  const coverage = Math.round(100 * (Object.keys(WEIGHTS) as Indicator[]).filter((k) => confidence[k] === "sensor").reduce((a, k) => a + WEIGHTS[k], 0));
+  const evidence = (Object.keys(WEIGHTS) as Indicator[]).reduce((a, k) => a + WEIGHTS[k] * CONFIDENCE_WEIGHT[confidence[k]], 0);
+  let trust = Math.round(evidence * 100) - mismatches.length * 14 - (broken ? 20 : 0);
   trust = Math.max(5, Math.min(100, trust));
   return {
-    village: v, declared, readings, indicators, score, trust, coverage, mismatches,
-    faults: readings.filter((r) => !r.ok),
+    village: v, declared, confidence, points, readings, indicators, score, trust, coverage, mismatches,
+    faults: readings.filter((r) => !r.ok || r.offline),
     river: readings.find((r) => r.sensor.type === "river"),
     assets,
   };
@@ -204,3 +247,11 @@ export const INDICATOR_INFO: Record<Indicator, { label: string; labelBn: string;
   assets: { label: "Water assets", labelBn: "জলাশয়", pai: "Water-sufficient panchayat" },
   governance: { label: "Responsiveness", labelBn: "সাড়া", pai: "Good governance" },
 };
+
+/** Village score at a past moment, for the 72-hour replay. */
+export function scoreAt(v: Village, now: number, hoursAgo: number) {
+  const at = now - hoursAgo * 3_600_000;
+  const r = readingsFor(v, at, Math.floor(hoursAgo / 24));
+  const assets = ASSETS.filter((a) => a.villageId === v.id).map(assetStatus);
+  return computeIndicators(v, r, assets).score;
+}

@@ -71,7 +71,7 @@ export default function AssetsPage() {
               return (
                 <tr key={a.asset.id} className="border-t border-[var(--line)]">
                   <td className="py-3 pr-4">
-                    <span className="font-semibold">{a.asset.name}</span>
+                    <a href={`/a/${a.asset.id}`} className="font-semibold hover:underline">{a.asset.name}</a>
                     <span className="block text-[12px] text-[var(--slate)]">{a.asset.kind}, {a.asset.scheme}, built {new Date(a.asset.builtOn + "-01").toLocaleDateString("en-IN", { month: "short", year: "numeric" })}{own ? "" : `, ${v.name}`}</span>
                   </td>
                   <td className="py-3 pr-4">

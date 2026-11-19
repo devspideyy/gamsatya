@@ -5,7 +5,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useSim } from "./SimProvider";
 import { VILLAGES } from "@/lib/data";
-import type { DictKey } from "@/lib/i18n";
+import { LANG_NAME, type DictKey } from "@/lib/i18n";
+import DemoConsole from "./DemoConsole";
 import type { Role } from "@/lib/types";
 
 /** One stroke icon family (1.8px, round joins) used for every nav item */
@@ -19,6 +20,8 @@ const ICON: Record<string, string> = {
   devices: "M8 8h8v8H8zM10 4v4M14 4v4M10 16v4M14 16v4M4 10h4M4 14h4M16 10h4M16 14h4",
   funds: "M4 20h16M6 17v-5M10 17V8M14 17v-7M18 17V5",
   myVillage: "M4 19V9l8-5 8 5v10M9 19v-6h6v6",
+  scoreboards: "M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3",
+  safety: "M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z",
   report: "M5 4h14v11H10l-5 4z M9 9h6",
 };
 
@@ -27,24 +30,29 @@ const NAV: Record<Role, { key: DictKey; icon: string; href: (v: string) => strin
     { key: "myVillage", icon: "myVillage", href: (v) => `/v/${v}` },
     { key: "report", icon: "report", href: () => "/reports" },
     { key: "alerts", icon: "alerts", href: () => "/alerts" },
+    { key: "safety", icon: "safety", href: () => "/safety" },
   ],
   panchayat: [
     { key: "dashboard", icon: "dashboard", href: () => "/dashboard" },
     { key: "reports", icon: "reports", href: () => "/reports" },
     { key: "alerts", icon: "alerts", href: () => "/alerts" },
     { key: "assets", icon: "assets", href: () => "/assets" },
+    { key: "safety", icon: "safety", href: () => "/safety" },
     { key: "ledger", icon: "ledger", href: () => "/ledger" },
     { key: "devices", icon: "devices", href: () => "/devices" },
   ],
   block: [
     { key: "villages", icon: "villages", href: () => "/dashboard" },
+    { key: "scoreboards", icon: "scoreboards", href: () => "/scoreboards" },
     { key: "assets", icon: "assets", href: () => "/assets" },
     { key: "reports", icon: "reports", href: () => "/reports" },
     { key: "alerts", icon: "alerts", href: () => "/alerts" },
+    { key: "safety", icon: "safety", href: () => "/safety" },
     { key: "ledger", icon: "ledger", href: () => "/ledger" },
   ],
   district: [
     { key: "funds", icon: "funds", href: () => "/funds" },
+    { key: "scoreboards", icon: "scoreboards", href: () => "/scoreboards" },
     { key: "villages", icon: "villages", href: () => "/dashboard" },
     { key: "assets", icon: "assets", href: () => "/assets" },
     { key: "alerts", icon: "alerts", href: () => "/alerts" },
@@ -88,14 +96,26 @@ export function Wordmark({ light = false }: { light?: boolean; compact?: boolean
 export function LangToggle({ light = false }: { light?: boolean }) {
   const { lang, setLang } = useSim();
   return (
-    <button
-      onClick={() => setLang(lang === "en" ? "bn" : "en")}
-      className={`min-h-[44px] rounded-md px-2.5 text-[15px] font-semibold ${light ? "text-[#f6f0e3] hover:bg-white/10" : "text-[var(--ink)] hover:bg-[var(--line-soft)]"}`}
-      aria-label={lang === "en" ? "বাংলায় দেখুন" : "Switch to English"}
-      lang={lang === "en" ? "bn" : "en"}
-    >
-      {lang === "en" ? "বাংলা" : "English"}
-    </button>
+    <select aria-label="Language" value={lang} onChange={(e) => setLang(e.target.value as typeof lang)}
+      className={`min-h-[44px] rounded-md bg-transparent px-1.5 text-[15px] font-semibold [&>option]:bg-[var(--card)] [&>option]:text-[var(--ink)] ${light ? "text-[#f6f0e3] hover:bg-white/10" : "text-[var(--ink)] hover:bg-[var(--line-soft)]"}`}>
+      {(Object.keys(LANG_NAME) as (keyof typeof LANG_NAME)[]).map((l) => <option key={l} value={l}>{LANG_NAME[l]}</option>)}
+    </select>
+  );
+}
+
+export function SiteFooter() {
+  const { t, lowData, setLowData } = useSim();
+  return (
+    <footer className="mx-auto mt-6 flex max-w-[1180px] flex-wrap items-center gap-x-6 gap-y-2 border-t border-[var(--line)] px-4 py-6 text-[14px] md:px-6">
+      <Link href="/method" className="font-semibold text-[var(--river)] hover:underline">{t("method")}</Link>
+      <Link href="/trust" className="font-semibold text-[var(--river)] hover:underline">{t("trust")}</Link>
+      <Link href="/pilot" className="font-semibold text-[var(--river)] hover:underline">{t("pilot")}</Link>
+      <label className="ml-auto flex min-h-[44px] cursor-pointer items-center gap-2 text-[var(--slate)]">
+        <input type="checkbox" checked={lowData} onChange={(e) => setLowData(e.target.checked)} className="h-4 w-4 accent-[var(--ink)]" />
+        {t("lowData")}: no map tiles, lighter pages
+      </label>
+      <p className="w-full text-[13px] text-[var(--slate)]">Prototype for the BharatSeva state hackathon. All village data is simulated.</p>
+    </footer>
   );
 }
 
@@ -161,7 +181,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </nav>
       </header>
       {!online && <div className="bg-[var(--turmeric-tint)] px-4 py-2 text-center text-[15px] text-[#6b4606]" role="status">{t("offline")}</div>}
-      <main id="main" className="mx-auto w-full max-w-[1180px] px-4 pb-20 pt-8 md:px-6 md:pt-10">{children}</main>
+      <main id="main" className="mx-auto w-full max-w-[1180px] px-4 pb-12 pt-8 md:px-6 md:pt-10">{children}</main>
+      <SiteFooter />
+      {role !== "citizen" && <DemoConsole />}
     </div>
   );
 }

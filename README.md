@@ -22,6 +22,21 @@ The problem statement is in [`docs/PROBLEM_STATEMENT.md`](docs/PROBLEM_STATEMENT
 | **What to fix first** | Scorecard | Action plan in English and Bengali, with a Listen button. Uses built-in rules; can switch to Ollama, Gemini or any OpenAI-compatible API. |
 | **Works offline** | Everywhere | Installable PWA. Reports are saved on the phone, and map tiles are cached. |
 
+## Merged from Gram-Scoreboard
+
+- **Confidence-weighted score:** sensor 100%, citizen 75%, declared only or unverified 45%. Nalbon has no streetlight or bin sensors yet, so those count at 45%.
+- **Demo console** (red button, bottom right): flood, fire and SOS scenarios. You can also pause the feed, cut power to a node, edit a reading, restore it, or reset everything.
+- **Four-stage incidents:** Watch, Warning, Emergency, Resolved, with response time and a CSV incident log.
+- **SOS fallback path:** internet, then LoRa, then SMS, then the control room, with Mark help sent and Mark safe.
+- **Rankings:** block, district and state, with animated reordering, anti-gaming rules and opt-in citizen points.
+- **CSV exports:** ranking, CSR report, incident log and ledger audit.
+- **Safety page:** grouped area counts (small counts hidden), safe routes checked against streetlights, and a moderation queue.
+- **Info pages:** How the score works, Trust and limits, and Pilot plan.
+- **Asset QR record** (`/a/<tag>`): live status, signed readings, chain check and photo check.
+- **72-hour map replay, Hindi, and low-data mode.**
+
+The pre-merge version is on the `v1-original` branch.
+
 ## Run it
 
 ```bash

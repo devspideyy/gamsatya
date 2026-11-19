@@ -111,6 +111,11 @@ export default function Landing() {
       </main>
 
       <footer className="mx-auto max-w-[1180px] px-5 pb-10 text-[13px] text-[var(--slate)] md:px-6">
+        <span className="mr-6 inline-flex gap-5 text-[14px] font-semibold">
+          <a href="/method" className="text-[var(--river)] hover:underline">How the score works</a>
+          <a href="/trust" className="text-[var(--river)] hover:underline">Trust and limits</a>
+          <a href="/pilot" className="text-[var(--river)] hover:underline">Pilot plan</a>
+        </span>
         Prototype for the BharatSeva state hackathon. Village names, sensors and figures are simulated.
       </footer>
     </div>

@@ -1,5 +1,5 @@
 export type Role = "citizen" | "panchayat" | "block" | "district";
-export type Lang = "en" | "bn";
+export type Lang = "en" | "bn" | "hi";
 
 export type ReportCategory = "handpump" | "streetlight" | "bin" | "tank" | "other";
 
@@ -37,12 +37,36 @@ export interface VillageAlert {
   deliveries: Delivery[];
 }
 
+export interface SosStep {
+  label: string;
+  detail: string;
+  /** ms after the SOS was raised */
+  after: number;
+  ok: boolean;
+}
+
 export interface Sos {
   id: string;
   ts: number;
   villageId: string;
   text: string;
-  status: "New" | "Help sent";
+  status: "New" | "Help sent" | "Safe";
+  /** How the SOS travelled: internet, LoRa, SMS, control room */
+  path: SosStep[];
+}
+
+export type IncidentKind = "Flood" | "Fire";
+export type Stage = "watch" | "warning" | "emergency" | "resolved";
+
+export interface Incident {
+  id: string;
+  kind: IncidentKind;
+  villageId: string;
+  /** When each stage was first reached */
+  stages: Partial<Record<Stage, number>>;
+  /** Response team and when it was assigned */
+  responder?: { team: string; at: number };
+  notes: { ts: number; text: string }[];
 }
 
 export const ALERT_TEMPLATES: Record<AlertKind, { en: string; bn: string }> = {

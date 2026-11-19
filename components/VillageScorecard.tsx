@@ -7,7 +7,7 @@ import { useSim } from "./SimProvider";
 import { Seal, Sparkline } from "./ui";
 import InsightsPanel from "./InsightsPanel";
 import SensorRegister from "./SensorRegister";
-import { history, INDICATOR_INFO, scoreBand } from "@/lib/sim";
+import { CONFIDENCE_LABEL, CONFIDENCE_WEIGHT, history, INDICATOR_INFO, scoreBand, WEIGHTS } from "@/lib/sim";
 import type { Indicator } from "@/lib/data";
 import type { Declaration, VillageSnapshot } from "@/lib/sim";
 
@@ -82,7 +82,7 @@ export default function VillageScorecard({ villageId, officer = false }: { villa
     ? "Someone edited this village's past readings. Its data is no longer trusted."
     : flagged
       ? "The panchayat declares more than the sensors measure."
-      : `Declared figures match the sensors. The village is ${scoreBand(snap.score).label.toLowerCase()}.`;
+      : `Declared figures match the sensors. Overall: ${scoreBand(snap.score).label.toLowerCase()}.`;
 
   return (
     <div>
@@ -117,7 +117,8 @@ export default function VillageScorecard({ villageId, officer = false }: { villa
                 <th className="pb-2 font-medium">Indicator</th>
                 <th className="pb-2 text-right font-medium">Declared</th>
                 <th className="pb-2 text-right font-medium">Measured</th>
-                <th className="hidden w-[38%] pb-2 pl-6 font-medium sm:table-cell"><span className="sr-only">Comparison</span></th>
+                <th className="pb-2 pl-5 font-medium">Evidence</th>
+                <th className="hidden w-[22%] pb-2 pl-6 font-medium sm:table-cell"><span className="sr-only">Comparison</span></th>
               </tr>
             </thead>
             <tbody>
@@ -136,6 +137,12 @@ export default function VillageScorecard({ villageId, officer = false }: { villa
                         : <span className={over ? "text-[var(--slate)] line-through decoration-[var(--sindoor)] decoration-2" : ""}>{claimed}%</span>}
                     </td>
                     <td className="num py-2.5 text-right text-[17px] font-bold" style={{ color: over ? "var(--sindoor)" : scoreBand(measured).color }}>{measured}%</td>
+                    <td className="py-2.5 pl-5 text-[13px]">
+                      <span className="font-semibold" style={{ color: snap.confidence[k] === "sensor" ? "var(--paddy)" : snap.confidence[k] === "citizen" ? "var(--river)" : "#7d5208" }}>
+                        {CONFIDENCE_LABEL[snap.confidence[k]][lang]}
+                      </span>
+                      <span className="num block text-[12px] text-[var(--slate)]">{snap.points[k]} of {Math.round(WEIGHTS[k] * 100)} pts, counted at {Math.round(CONFIDENCE_WEIGHT[snap.confidence[k]] * 100)}%</span>
+                    </td>
                     <td className="hidden py-2.5 pl-6 sm:table-cell">
                       <div className="relative h-2.5 rounded-full bg-[#ebe2d0]" aria-hidden>
                         <div className="absolute inset-y-0 left-0 rounded-full transition-[width] duration-500" style={{ width: `${measured}%`, background: over ? "var(--sindoor)" : scoreBand(measured).color }} />

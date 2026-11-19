@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useSim } from "@/components/SimProvider";
 import { PageHeader, rupees, ScoreText } from "@/components/ui";
 import { VILLAGES } from "@/lib/data";
+import { downloadCsv, today } from "@/lib/csv";
 
 const TRUST_LINE = 70;
 const HOLD_SHARE = 0.3;
@@ -36,7 +37,15 @@ export default function FundsPage() {
       <PageHeader
         title="Where should the next rupee go?"
         lede="Villages are ranked by verified need. If a village's data trust is below 70%, part of its money waits until a field check confirms the data."
-      />
+      >
+        <button className="btn btn-ghost" onClick={() => downloadCsv(`gramsatya-csr-report-${today()}.csv`, [
+          ["Rank", "Village", "Population", "Score", "Data trust %", "Suggested amount (Rs)", "Release now (Rs)", "Held until verified (Rs)", "Sensor faults", "Ponds failing"],
+          ...ranked.map((r, i) => {
+            const now = r.hold ? r.amount * (1 - HOLD_SHARE) : r.amount;
+            return [i + 1, r.s.village.name, r.s.village.population, r.s.score, r.trust, Math.round(r.amount), Math.round(now), Math.round(r.amount - now), r.s.faults.length, r.s.assets.filter((a) => a.status !== "Working").length];
+          }),
+        ])}>Download CSR report (CSV)</button>
+      </PageHeader>
 
       <div className="grid gap-x-12 gap-y-10 lg:grid-cols-[320px_1fr]">
         <section aria-labelledby="formula" className="lg:sticky lg:top-24 lg:self-start">

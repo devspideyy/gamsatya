@@ -5,6 +5,7 @@ import { useSim } from "@/components/SimProvider";
 import { PageHeader } from "@/components/ui";
 import { SENSORS, VILLAGES, villageById } from "@/lib/data";
 import { sha256, payload } from "@/lib/ledger";
+import { downloadCsv, today } from "@/lib/csv";
 
 function fmtValue(sensorId: string, value: number) {
   if (sensorId.includes("streetlight")) return value > 5 ? `On, ${value.toFixed(0)} W` : "Off";
@@ -61,6 +62,11 @@ export default function LedgerPage() {
           </div>
           <div className="flex flex-wrap gap-2">
             <button className="btn btn-ghost" onClick={reverify}>Verify again</button>
+            <button className="btn btn-ghost" onClick={() => downloadCsv(`gramsatya-ledger-audit-${today()}.csv`, [
+              ["No.", "Time", "Village", "Sensor", "Value", "Source", "Previous fingerprint", "Fingerprint", "Check"],
+              ...ledger.map((r) => [r.i, new Date(r.ts).toISOString(), r.villageId, r.sensorId, r.value.toFixed(2), r.source, r.prevHash, r.hash,
+                brokenAt !== undefined && r.i === brokenAt ? "MISMATCH" : brokenAt !== undefined && r.i > brokenAt ? "after edit" : "ok"]),
+            ])}>Download audit (CSV)</button>
             {!verify.ok && brokenAt !== undefined && (
               <button className="btn btn-ghost" onClick={() => {
                 setFilter("All");

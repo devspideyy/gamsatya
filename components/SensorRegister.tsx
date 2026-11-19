@@ -13,6 +13,7 @@ const ORDER: { type: SensorType; label: string; good: string }[] = [
 ];
 
 function fmt(r: Reading) {
+  if (r.offline) return "Offline";
   if (r.sensor.type === "river") return `${r.value.toFixed(2)} m`;
   if (r.sensor.type === "handpump") return `${r.value.toFixed(1)} L/min`;
   if (r.sensor.type === "streetlight") return r.value > 5 ? "On" : "Off";
@@ -40,16 +41,18 @@ export default function SensorRegister({ snap }: { snap: VillageSnapshot }) {
               <ul className="flex flex-wrap gap-1.5">
                 {rs.map((r) => {
                   const since = !r.ok && r.source !== "device" ? faultSince(r.sensor.id) : undefined;
-                  const bad = !r.ok;
+                  const bad = !r.ok && !r.offline;
                   return (
-                    <li key={r.sensor.id} title={`${r.sensor.label}${since !== undefined ? `, faulty for ${since} days` : ""}`}
-                      className="min-w-[84px] rounded-md px-2.5 py-1.5"
-                      style={{ background: bad ? "var(--sindoor-tint)" : r.source === "device" ? "var(--river-tint)" : "#efe7d7" }}>
+                    <li key={r.sensor.id}>
+                    <Link href={`/a/${r.sensor.id}`} title={`${r.sensor.label}${since !== undefined ? `, faulty for ${since} days` : ""}. Open its record.`}
+                      className="block min-w-[84px] rounded-md px-2.5 py-1.5 hover:outline hover:outline-2 hover:outline-[var(--brass-soft)]"
+                      style={{ background: r.offline ? "#e4ddd0" : bad ? "var(--sindoor-tint)" : r.source === "device" ? "var(--river-tint)" : "#efe7d7" }}>
                       <span className="block text-[11px] text-[var(--slate)]">
                         No. {r.sensor.label.split(" ").pop()}{r.source === "device" && <b className="ml-1 text-[var(--river)]">ESP32</b>}
                       </span>
-                      <span className="num block text-[14px] font-semibold" style={{ color: bad ? "var(--sindoor)" : "var(--ink)" }}>{fmt(r)}</span>
-                      {since !== undefined && <span className="block text-[11px] text-[var(--sindoor)]">{since} days</span>}
+                      <span className="num block text-[14px] font-semibold" style={{ color: r.offline ? "var(--slate)" : bad ? "var(--sindoor)" : "var(--ink)" }}>{fmt(r)}</span>
+                      {since !== undefined && !r.offline && <span className="block text-[11px] text-[var(--sindoor)]">{since} days</span>}
+                    </Link>
                     </li>
                   );
                 })}

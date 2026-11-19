@@ -6,13 +6,14 @@ import { useSim } from "./SimProvider";
 import MapView from "./MapView";
 import { PageHeader, ScoreText, Sparkline, TrustText } from "./ui";
 import { BLOCK_NAME, RIVER_DANGER_M, VILLAGES } from "@/lib/data";
-import { history, INDICATOR_INFO, scoreBand } from "@/lib/sim";
+import { history, INDICATOR_INFO, scoreAt, scoreBand } from "@/lib/sim";
 
 type SortKey = "score" | "trust" | "name";
 
 export default function BlockOverview() {
   const { snaps, now, reports, verify, ledger } = useSim();
   const [sort, setSort] = useState<SortKey>("score");
+  const [replay, setReplay] = useState(0); // hours ago, 0 = live
   const dayKey = new Date(now).toDateString();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const hists = useMemo(() => Object.fromEntries(VILLAGES.map((v) => [v.id, history(v, now, 30).map((h) => h.score)])), [dayKey]);
@@ -44,13 +45,16 @@ export default function BlockOverview() {
     const l = scoreBand(score).label;
     return l === "Good" ? "#3b6834" : l === "Needs work" ? "#a06a0c" : "#a3241b";
   };
-  const points = snaps.map((s) => ({
+  const points = snaps.map((s) => {
+    const sc = replay ? scoreAt(s.village, now, replay) : s.score;
+    return {
     lat: s.village.lat, lng: s.village.lng, radius: 12,
-    label: `${s.village.name}: score ${s.score}, data trust ${s.trust}%`,
-    color: hex(s.score),
+    label: `${s.village.name}: score ${sc}${replay ? ` (${replay} h ago)` : `, data trust ${s.trust}%`}`,
+    color: hex(sc),
     ring: s.mismatches.length > 0 || brokenVillage === s.village.id,
     href: `/village/${s.village.id}`,
-  }));
+  };
+  });
 
   return (
     <div>
@@ -131,7 +135,11 @@ export default function BlockOverview() {
         <section aria-labelledby="bmap">
           <h2 id="bmap" className="mb-3 text-[24px]">Map</h2>
           <MapView points={points} height={300} />
-          <p className="mt-2 text-[13px] text-[var(--slate)]">Colour shows the score. A dark ring means the village&apos;s data needs checking.</p>
+          <label className="mt-3 block text-[14px]">
+            <span className="flex justify-between"><span className="font-semibold">Replay the last 72 hours</span><span className="num text-[var(--slate)]">{replay ? `${replay} h ago` : "Live"}</span></span>
+            <input type="range" min={0} max={72} step={3} value={replay} onChange={(e) => setReplay(Number(e.target.value))} className="w-full accent-[var(--ink)]" aria-label="Hours ago" />
+          </label>
+          <p className="mt-1 text-[13px] text-[var(--slate)]">Colour shows the score. A dark ring means the village&apos;s data needs checking.</p>
         </section>
       </div>
     </div>

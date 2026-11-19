@@ -6,8 +6,22 @@ import { allSnapshots, Declaration, noise, VillageSnapshot } from "@/lib/sim";
 import { appendRecord, LedgerRecord, verifyChain, VerifyResult } from "@/lib/ledger";
 import { translate, DictKey } from "@/lib/i18n";
 import {
-  ALERT_TEMPLATES, AlertKind, CitizenReport, Lang, ReportCategory, Role, Sos, VillageAlert,
+  ALERT_TEMPLATES, AlertKind, CitizenReport, Incident, IncidentKind, Lang, ReportCategory, Role, Sos, SosStep, VillageAlert,
 } from "@/lib/types";
+import { villageById } from "@/lib/data";
+
+export interface PhotoEvidence { photo: string; lat?: number; lng?: number; ts: number }
+
+function sosPath(villageId: string): SosStep[] {
+  const v = villageById(villageId);
+  const twoG = v?.network === "2G";
+  return [
+    { label: "Mobile internet", detail: twoG ? "No data on 2G, could not send" : "Sent over 4G", after: 1500, ok: !twoG },
+    { label: `LoRa radio to ${v?.gateway ?? "gateway"}`, detail: "Reached the panchayat gateway", after: 3500, ok: true },
+    { label: "SMS to volunteer", detail: "Ward volunteer and ASHA worker notified", after: 6500, ok: true },
+    { label: "Block control room", detail: "Logged and acknowledged", after: 9500, ok: true },
+  ];
+}
 
 const TICK = 4000;
 const LEDGER_MAX = 80;
@@ -31,10 +45,20 @@ interface Ctx {
   sendAlert: (kind: AlertKind, villageIds: string[], source?: VillageAlert["source"], custom?: { en: string; bn: string }) => VillageAlert;
   sos: Sos[];
   sendSos: (villageId: string, text: string) => void;
-  markSos: (id: string) => void;
+  markSos: (id: string, status?: Sos["status"]) => void;
+  incidents: Incident[];
+  startFire: (villageId: string) => void;
+  offline: string[];
+  setOffline: (sensorId: string, off: boolean) => void;
+  paused: boolean;
+  setPaused: (p: boolean) => void;
+  lowData: boolean;
+  setLowData: (on: boolean) => void;
+  photos: Record<string, PhotoEvidence>;
+  addPhoto: (assetId: string, p: PhotoEvidence) => void;
   ledger: LedgerRecord[];
   verify: VerifyResult;
-  tamper: () => LedgerRecord | null;
+  tamper: (sensorId?: string) => LedgerRecord | null;
   restoreLedger: () => void;
   storm: boolean;
   setStorm: (on: boolean) => void;
@@ -85,7 +109,7 @@ function seedReports(now: number): CitizenReport[] {
   return [
     { id: "r1", villageId: "radhaganj", category: "handpump", text: "Handpump near the primary school gives no water for 2 weeks.", ts: now - 9 * 24 * h, status: "Open", check: "confirmed", matchedSensor: "radhaganj-handpump-1" },
     { id: "r2", villageId: "radhaganj", category: "streetlight", text: "Road to the bus stand is dark at night. Unsafe for girls coming back from tuition.", ts: now - 6 * 24 * h, status: "In progress", check: "confirmed", matchedSensor: "radhaganj-streetlight-2" },
-    { id: "r3", villageId: "nalbon", category: "bin", text: "Bin at the haat is overflowing, dogs spreading garbage.", ts: now - 30 * h, status: "Open", check: "confirmed", matchedSensor: "nalbon-bin-3" },
+    { id: "r3", villageId: "nalbon", category: "bin", text: "Bin at the haat is overflowing, dogs spreading garbage.", ts: now - 30 * h, status: "Open", check: "no-sensor" },
     { id: "r4", villageId: "kusumpur", category: "handpump", text: "Handpump 2 was broken, now repaired. Thank you.", ts: now - 20 * 24 * h, status: "Resolved", check: "confirmed" },
     { id: "r5", villageId: "dakshin-mathabhanga", category: "tank", text: "No tap water in our para since last week.", ts: now - 4 * 24 * h, status: "Open", check: "confirmed", matchedSensor: "dakshin-mathabhanga-tank-1" },
     { id: "r6", villageId: "kusumpur", category: "streetlight", text: "Light near the ghat is off.", ts: now - 2 * 24 * h, status: "In progress", check: "confirmed", matchedSensor: "kusumpur-streetlight-6" },
@@ -108,6 +132,11 @@ export default function SimProvider({ children }: { children: React.ReactNode })
   const [overrides, setOverrides] = useState<Record<string, { value: number; ts: number }>>({});
   const [deviceFeed, setDeviceFeed] = useState<DeviceReading[]>([]);
   const [declarations, setDeclarations] = useState<Record<string, Declaration>>({});
+  const [incidents, setIncidents] = useState<Incident[]>([]);
+  const [offline, setOfflineList] = useState<string[]>([]);
+  const [paused, setPaused] = useState(false);
+  const [lowData, setLowDataState] = useState(false);
+  const [photos, setPhotos] = useState<Record<string, PhotoEvidence>>({});
   const lastDeviceTs = useRef(0);
   const lastLedgerTick = useRef(0);
   const autoAlerted = useRef<Set<string>>(new Set());
@@ -123,6 +152,9 @@ export default function SimProvider({ children }: { children: React.ReactNode })
     setAlerts(load<VillageAlert[]>("gs.alerts", []));
     setSos(load<Sos[]>("gs.sos", []));
     setDeclarations(load<Record<string, Declaration>>("gs.declarations", {}));
+    setIncidents(load<Incident[]>("gs.incidents", []));
+    setLowDataState(load("gs.lowData", false));
+    setPhotos(load<Record<string, PhotoEvidence>>("gs.photos", {}));
     setOnline(navigator.onLine);
     setMounted(true);
     const on = () => setOnline(true), off = () => setOnline(false);
@@ -141,13 +173,16 @@ export default function SimProvider({ children }: { children: React.ReactNode })
   useEffect(() => { if (mounted) save("gs.alerts", alerts); }, [alerts, mounted]);
   useEffect(() => { if (mounted) save("gs.sos", sos); }, [sos, mounted]);
   useEffect(() => { if (mounted) save("gs.declarations", declarations); }, [declarations, mounted]);
+  useEffect(() => { if (mounted) save("gs.incidents", incidents); }, [incidents, mounted]);
+  useEffect(() => { if (mounted) save("gs.photos", photos); }, [photos, mounted]);
 
   // --- clock
   useEffect(() => {
     if (!mounted) return;
+    if (paused) return;
     const id = setInterval(() => setNow(Date.now()), TICK);
     return () => clearInterval(id);
-  }, [mounted]);
+  }, [mounted, paused]);
 
   // --- storm surge simulation
   useEffect(() => {
@@ -225,8 +260,8 @@ export default function SimProvider({ children }: { children: React.ReactNode })
   }, [verify, ledger]);
 
   const snaps = useMemo(
-    () => (now ? allSnapshots(now, { surge, overrides, reportResolution: resolution, brokenLedger: new Set(brokenVillage ? [brokenVillage] : []), declarations }) : []),
-    [now, surge, overrides, resolution, brokenVillage, declarations],
+    () => (now ? allSnapshots(now, { surge, overrides, reportResolution: resolution, brokenLedger: new Set(brokenVillage ? [brokenVillage] : []), declarations, offline: new Set(offline) }) : []),
+    [now, surge, overrides, resolution, brokenVillage, declarations, offline],
   );
 
   // --- ledger: seed history then append simulated readings each tick
@@ -288,6 +323,49 @@ export default function SimProvider({ children }: { children: React.ReactNode })
     }
   }, [snaps, sendAlert]);
 
+  // --- four-stage flood incidents driven by the river gauges
+  useEffect(() => {
+    if (!snaps.length) return;
+    setIncidents((list) => {
+      let changed = false;
+      let next = list;
+      for (const s of snaps) {
+        if (!s.river) continue;
+        const lvl = s.river.value;
+        const open = next.find((i) => i.kind === "Flood" && i.villageId === s.village.id && !i.stages.resolved);
+        if (!open && lvl >= 3.8) {
+          next = [{ id: `inc-${Date.now()}-${s.village.id}`, kind: "Flood", villageId: s.village.id, stages: { watch: now },
+            notes: [{ ts: now, text: `River gauge at ${lvl.toFixed(2)} m. Watch started.` }] }, ...next];
+          changed = true;
+          continue;
+        }
+        if (!open) continue;
+        const upd: Incident = { ...open, stages: { ...open.stages }, notes: [...open.notes] };
+        if (lvl >= 4.2 && !upd.stages.warning) { upd.stages.warning = now; upd.notes.push({ ts: now, text: `River at ${lvl.toFixed(2)} m. Warning: volunteers alerted, shelters opened.` }); }
+        if (lvl >= RIVER_DANGER_M && !upd.stages.emergency) {
+          upd.stages.emergency = now;
+          upd.responder = { team: "SDRF boat team, Gosaba", at: now + 40_000 };
+          upd.notes.push({ ts: now, text: `Danger line crossed at ${lvl.toFixed(2)} m. Sirens sounded, SDRF requested.` });
+        }
+        if (!storm && lvl < 3.8) { upd.stages.resolved = now; upd.notes.push({ ts: now, text: "Water back below the watch line. Incident closed." }); }
+        if (JSON.stringify(upd) !== JSON.stringify(open)) { next = next.map((i) => (i.id === open.id ? upd : i)); changed = true; }
+      }
+      return changed ? next.slice(0, 30) : list;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [snaps]);
+
+  const startFire = useCallback((vid: string) => {
+    const id = `inc-fire-${Date.now()}`;
+    const t0 = Date.now();
+    setIncidents((x) => [{ id, kind: "Fire" as IncidentKind, villageId: vid, stages: { watch: t0 }, notes: [{ ts: t0, text: "Two villagers report smoke near the haat." }] }, ...x]);
+    const step = (ms: number, f: (i: Incident) => Incident) => setTimeout(() => setIncidents((x) => x.map((i) => (i.id === id ? f(i) : i))), ms);
+    step(4000, (i) => ({ ...i, stages: { ...i.stages, warning: Date.now() }, notes: [...i.notes, { ts: Date.now(), text: "Photo report confirms fire in a thatched shop. Ward volunteer on the way." }] }));
+    step(8000, (i) => ({ ...i, stages: { ...i.stages, emergency: Date.now() }, responder: { team: "Fire tender, Canning station", at: Date.now() + 30_000 }, notes: [...i.notes, { ts: Date.now(), text: "Fire spreading. Siren sounded, fire service called." }] }));
+    step(18000, (i) => ({ ...i, stages: { ...i.stages, resolved: Date.now() }, notes: [...i.notes, { ts: Date.now(), text: "Fire out. No injuries. Damage report filed." }] }));
+    sendAlert("Evacuate", [vid], "Manual", { en: "Fire near the haat. Keep away from the market area and let the fire tender through.", bn: "হাটের কাছে আগুন। বাজার এলাকা থেকে দূরে থাকুন, দমকলকে পথ দিন।" });
+  }, [sendAlert]);
+
   const ctx: Ctx = {
     now,
     role,
@@ -311,12 +389,23 @@ export default function SimProvider({ children }: { children: React.ReactNode })
     alerts,
     sendAlert,
     sos,
-    sendSos: (vid, text) => setSos((x) => [{ id: `s-${Date.now()}`, ts: Date.now(), villageId: vid, text, status: "New" as const }, ...x].slice(0, 30)),
-    markSos: (id) => setSos((x) => x.map((s) => (s.id === id ? { ...s, status: "Help sent" } : s))),
+    sendSos: (vid, text) => setSos((x) => [{ id: `s-${Date.now()}`, ts: Date.now(), villageId: vid, text, status: "New" as const, path: sosPath(vid) }, ...x].slice(0, 30)),
+    markSos: (id, status = "Help sent") => setSos((x) => x.map((s) => (s.id === id ? { ...s, status } : s))),
+    incidents,
+    startFire,
+    offline,
+    setOffline: (sid, off) => setOfflineList((x) => (off ? [...new Set([...x, sid])] : x.filter((y) => y !== sid))),
+    paused,
+    setPaused,
+    lowData,
+    setLowData: (on) => { setLowDataState(on); save("gs.lowData", on); },
+    photos,
+    addPhoto: (aid, p) => setPhotos((x) => ({ ...x, [aid]: p })),
     ledger,
     verify,
-    tamper: () => {
-      const target = [...ledger].reverse().find((r) => r.villageId === "radhaganj" && r.value < 1)
+    tamper: (sensorId) => {
+      const target = (sensorId ? [...ledger].reverse().find((r) => r.sensorId === sensorId) : undefined)
+        ?? [...ledger].reverse().find((r) => r.villageId === "radhaganj" && r.value < 1)
         ?? [...ledger].reverse().find((r) => r.villageId === "radhaganj")
         ?? ledger[Math.floor(ledger.length / 2)];
       if (!target) return null;
@@ -332,8 +421,12 @@ export default function SimProvider({ children }: { children: React.ReactNode })
     deviceFeed,
     acceptDeviceReadings,
     resetDemo: () => {
-      for (const k of ["gs.reports", "gs.alerts", "gs.sos", "gs.declarations"]) localStorage.removeItem(k);
+      for (const k of ["gs.reports", "gs.alerts", "gs.sos", "gs.declarations", "gs.incidents", "gs.photos"]) localStorage.removeItem(k);
       setDeclarations({});
+      setIncidents([]);
+      setOfflineList([]);
+      setPhotos({});
+      setPaused(false);
       setReports(seedReports(Date.now()));
       setAlerts([]);
       setSos([]);
