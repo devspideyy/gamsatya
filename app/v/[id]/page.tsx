@@ -11,6 +11,7 @@ import { INDICATOR_INFO } from "@/lib/sim";
 import { bnDigits, summarize, Tone } from "@/lib/summary";
 import { speak } from "@/lib/speak";
 import { CATEGORY_LABEL } from "@/lib/types";
+import { L, phraseLang, villageName } from "@/lib/phrases";
 
 const TONE: Record<Tone, { color: string; en: string; bn: string }> = {
   good: { color: "var(--paddy)", en: "Working", bn: "ঠিক আছে" },
@@ -29,9 +30,9 @@ export default function PublicVillagePage() {
     return (
       <main className="mx-auto max-w-xl p-6">
         <Wordmark />
-        <h1 className="mt-8 text-[24px]">This village page does not exist</h1>
-        <p className="mt-2 text-[var(--slate)]">The QR code or link may be wrong. Ask the panchayat office for the correct one.</p>
-        <Link href="/" className="btn btn-primary mt-4">Go to GramSatya</Link>
+        <h1 className="mt-8 text-[24px]">{L("This village page does not exist")}</h1>
+        <p className="mt-2 text-[var(--slate)]">{L("The QR code or link may be wrong. Ask the panchayat office for the correct one.")}</p>
+        <Link href="/" className="btn btn-primary mt-4">{L("Go to GramSatya")}</Link>
       </main>
     );
   }
@@ -60,37 +61,37 @@ export default function PublicVillagePage() {
       </header>
 
       <main className="mx-auto max-w-3xl px-4 py-6">
-        <p className="text-[13px] text-[var(--slate)]">{bn ? "সর্বজনীন পাতা, সবাই দেখতে পারেন" : "Public page. Anyone can see this, no login needed."}</p>
+        <p className="text-[13px] text-[var(--slate)]">{bn ? "সর্বজনীন পাতা, সবাই দেখতে পারেন" : L("Public page. Anyone can see this, no login needed.")}</p>
 
         <section className="mt-3 flex flex-col items-center gap-5 sm:flex-row sm:items-center" aria-labelledby="vname">
           <Seal score={snap.score} name={village.name} size={176} verified={!ledgerBroken} />
           <div className="text-center sm:text-left">
             <h1 id="vname" className="text-[46px] leading-none">
-              {bn ? village.nameBn : village.name}
+              {villageName(village)}
             </h1>
             <p className="mt-1 text-[16px] text-[var(--slate)]">{bn ? `${village.name} গ্রাম পঞ্চায়েত` : `${village.nameBn}, Gram Panchayat`}</p>
             <p className="mt-3 text-[20px] font-semibold" style={{ color: problems ? "var(--sindoor)" : "var(--paddy)" }}>
               {problems
                 ? bn ? bnDigits(`এখন ${problems}টি পরিষেবায় সমস্যা চলছে`) : `${problems} public service${problems > 1 ? "s have" : " has"} a problem right now`
-                : bn ? "সব পরিষেবা ঠিক আছে" : "All public services are working"}
+                : bn ? "সব পরিষেবা ঠিক আছে" : L("All public services are working")}
             </p>
             <p className="mt-1 flex items-center justify-center gap-1.5 text-[13px] text-[var(--slate)] sm:justify-start">
-              <span className="live-dot" aria-hidden />{bn ? "সেন্সর থেকে সরাসরি তথ্য" : "Live from sensors, not from paper forms"}
+              <span className="live-dot" aria-hidden />{bn ? "সেন্সর থেকে সরাসরি তথ্য" : L("Live from sensors, not from paper forms")}
             </p>
           </div>
         </section>
 
         {alert && (
           <section className="mt-6 rounded-[10px] border-2 border-[var(--sindoor)] bg-[var(--sindoor-tint)] p-4" aria-labelledby="alert-h" role="alert">
-            <h2 id="alert-h" className="text-[15px] text-[var(--sindoor)]">{bn ? "সতর্কবার্তা" : "Warning"}, {timeAgo(alert.ts)}</h2>
+            <h2 id="alert-h" className="text-[15px] text-[var(--sindoor)]">{bn ? "সতর্কবার্তা" : L("Warning")}, {timeAgo(alert.ts)}</h2>
             <p className="mt-1 text-[19px] font-semibold leading-snug" lang="bn">{alert.bn}</p>
             {!bn && <p className="mt-1 text-[15px]">{alert.en}</p>}
-            <button className="btn btn-danger mt-3" onClick={() => setNote(speak(bn ? alert.bn : alert.en, bn ? "bn-IN" : "en-IN").note ?? null)}>{bn ? "শুনুন" : "Listen"}</button>
+            <button className="btn btn-danger mt-3" onClick={() => setNote(speak(bn ? alert.bn : alert.en, bn ? "bn-IN" : "en-IN").note ?? null)}>{bn ? "শুনুন" : L("Listen")}</button>
             {note && <p className="mt-2 text-[12px]">{note}</p>}
           </section>
         )}
 
-        <section className="mt-8 border-y border-[var(--ink)]" aria-label={bn ? "আজকের পরিষেবা" : "Public services today"}>
+        <section className="mt-8 border-y border-[var(--ink)]" aria-label={bn ? "আজকের পরিষেবা" : L("Public services today")}>
           {items.map((it) => (
             <div key={it.key} className="flex items-center gap-4 border-t border-[var(--line)] py-3.5 first:border-t-0">
               <span className="h-3.5 w-3.5 shrink-0 rounded-full" style={{ background: TONE[it.tone].color }} aria-hidden />
@@ -105,7 +106,7 @@ export default function PublicVillagePage() {
 
         <section className="mt-4 text-[15px]" aria-label="Data check">
           {ledgerBroken ? (
-            <p className="font-semibold text-[var(--sindoor)]">{bn ? "এই গ্রামের পুরনো তথ্য বদলানো হয়েছে। তথ্য যাচাই চলছে।" : "Someone changed this village's past data. It is being checked."}</p>
+            <p className="font-semibold text-[var(--sindoor)]">{bn ? "এই গ্রামের পুরনো তথ্য বদলানো হয়েছে। তথ্য যাচাই চলছে।" : L("Someone changed this village's past data. It is being checked.")}</p>
           ) : snap.mismatches.length ? (
             <p>
               <b className="text-[var(--sindoor)]">{bn ? "পঞ্চায়েতের ঘোষিত তথ্য সেন্সরের সাথে মেলেনি। " : "The panchayat's own report does not match the sensors. "}</b>
@@ -114,13 +115,13 @@ export default function PublicVillagePage() {
                 : `${INDICATOR_INFO[m.indicator].label}: reported ${m.claimed}%, measured ${m.measured}%`).join(bn ? "। " : ". ")}{bn ? "।" : "."}
             </p>
           ) : (
-            <p className="text-[var(--paddy)]">{bn ? "পঞ্চায়েতের ঘোষিত তথ্য সেন্সরের সাথে মিলছে।" : "The panchayat's own report matches what the sensors measure."}</p>
+            <p className="text-[var(--paddy)]">{bn ? "পঞ্চায়েতের ঘোষিত তথ্য সেন্সরের সাথে মিলছে।" : L("The panchayat's own report matches what the sensors measure.")}</p>
           )}
         </section>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
-          <button className="btn btn-primary !py-3.5 text-[16px]" onClick={() => goAs("/reports")}>{bn ? "সমস্যা জানান" : "Report a problem"}</button>
-          <button className="btn btn-ghost !py-3.5 text-[16px]" onClick={() => goAs("/alerts")}>{bn ? "সতর্কবার্তা ও জরুরি সাহায্য" : "Alerts and SOS"}</button>
+          <button className="btn btn-primary !py-3.5 text-[16px]" onClick={() => goAs("/reports")}>{bn ? "সমস্যা জানান" : L("Report a problem")}</button>
+          <button className="btn btn-ghost !py-3.5 text-[16px]" onClick={() => goAs("/alerts")}>{bn ? "সতর্কবার্তা ও জরুরি সাহায্য" : L("Alerts and SOS")}</button>
         </div>
 
         <section className="mt-6" aria-labelledby="open-h">
@@ -129,18 +130,18 @@ export default function PublicVillagePage() {
             {open.slice(0, 4).map((r) => (
               <li key={r.id} className="flex items-center justify-between gap-3 border-t border-[var(--line)] py-3">
                 <div className="min-w-0">
-                  <p className="font-medium">{bn ? CATEGORY_LABEL[r.category].bn : CATEGORY_LABEL[r.category].en}</p>
+                  <p className="font-medium">{CATEGORY_LABEL[r.category][phraseLang()]}</p>
                   <p className="truncate text-[13px] text-[var(--slate)]">{r.text}</p>
                 </div>
                 <span className="shrink-0 text-[12px] text-[var(--slate)]">{r.status}, {timeAgo(r.ts)}</span>
               </li>
             ))}
-            {open.length === 0 && <li className="text-[var(--slate)]">{bn ? "কোনো খোলা অভিযোগ নেই।" : "No open complaints."}</li>}
+            {open.length === 0 && <li className="text-[var(--slate)]">{bn ? "কোনো খোলা অভিযোগ নেই।" : L("No open complaints.")}</li>}
           </ul>
         </section>
 
         <footer className="mt-10 border-t border-[var(--line)] pt-4 text-[12px] text-[var(--slate)]">
-          GramSatya prototype for the BharatSeva state hackathon. All village data on this page is simulated. <Link href="/" className="font-semibold text-[var(--river)] hover:underline">Officer login</Link>
+          {L("GramSatya prototype for the BharatSeva state hackathon. All village data on this page is simulated.")} <Link href="/" className="font-semibold text-[var(--river)] hover:underline">{L("Officer login")}</Link>
         </footer>
       </main>
     </div>

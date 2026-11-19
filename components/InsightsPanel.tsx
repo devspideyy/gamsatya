@@ -6,6 +6,7 @@ import { Insight, ruleInsights } from "@/lib/insights";
 import { bnDigits } from "@/lib/summary";
 import { speak } from "@/lib/speak";
 import type { VillageSnapshot } from "@/lib/sim";
+import { L } from "@/lib/phrases";
 
 const PRIORITY = {
   high: { color: "var(--sindoor)", en: "Urgent", bn: "জরুরি" },
@@ -50,15 +51,15 @@ export default function InsightsPanel({ snap }: { snap: VillageSnapshot }) {
   return (
     <section aria-labelledby="fix-title">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 id="fix-title" className="text-[24px]">{bn ? "আগে যা সারাতে হবে" : "What to fix first"}</h2>
+        <h2 id="fix-title" className="text-[24px]">{bn ? "আগে যা সারাতে হবে" : L("What to fix first")}</h2>
         <div className="flex gap-4 text-[14px] font-semibold text-[var(--river)]">
-          <button onClick={listen} className="hover:underline">{bn ? "শুনুন" : "Listen"}</button>
+          <button onClick={listen} className="hover:underline">{bn ? "শুনুন" : L("Listen")}</button>
           {provider !== "rules" && <button onClick={generate} disabled={loading} className="hover:underline disabled:opacity-50">{loading ? "Asking…" : `Ask AI (${provider})`}</button>}
         </div>
       </div>
       <p className="mt-2 text-[15px] leading-relaxed text-[var(--slate)]">{bn ? bnDigits(shown.summaryBn) : shown.summaryEn}</p>
       {shown.actions.length === 0 ? (
-        <p className="mt-4 font-semibold text-[var(--paddy)]">{bn ? "এখন কোনো কাজ বাকি নেই।" : "Nothing needs fixing right now."}</p>
+        <p className="mt-4 font-semibold text-[var(--paddy)]">{bn ? "এখন কোনো কাজ বাকি নেই।" : L("Nothing needs fixing right now.")}</p>
       ) : (
         <ol className="mt-4">
           {shown.actions.map((a, i) => (

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { SensorType } from "@/lib/data";
 import { faultSince, Reading, VillageSnapshot } from "@/lib/sim";
+import { L } from "@/lib/phrases";
 
 const ORDER: { type: SensorType; label: string; good: string }[] = [
   { type: "handpump", label: "Handpumps", good: "flowing" },
@@ -24,8 +25,8 @@ export default function SensorRegister({ snap }: { snap: VillageSnapshot }) {
   return (
     <section aria-labelledby="register-title">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 id="register-title" className="text-[24px]">Live sensors</h2>
-        <Link href="/devices" className="text-[14px] font-semibold text-[var(--river)] hover:underline">Connect a device</Link>
+        <h2 id="register-title" className="text-[24px]">{L("Live sensors")}</h2>
+        <Link href="/devices" className="text-[14px] font-semibold text-[var(--river)] hover:underline">{L("Connect a device")}</Link>
       </div>
       <div className="mt-2">
         {ORDER.map(({ type, label, good }) => {
@@ -35,8 +36,8 @@ export default function SensorRegister({ snap }: { snap: VillageSnapshot }) {
           return (
             <div key={type} className="grid grid-cols-1 gap-x-4 gap-y-2 border-t border-[var(--line)] py-3 sm:grid-cols-[150px_1fr]">
               <p className="text-[15px]">
-                <span className="font-semibold">{label}</span>
-                <span className={`block text-[13px] ${ok === rs.length ? "text-[var(--slate)]" : "font-semibold text-[var(--sindoor)]"}`}>{ok} of {rs.length} {good}</span>
+                <span className="font-semibold">{L(label)}</span>
+                <span className={`block text-[13px] ${ok === rs.length ? "text-[var(--slate)]" : "font-semibold text-[var(--sindoor)]"}`}>{ok} / {rs.length} {L(good)}</span>
               </p>
               <ul className="flex flex-wrap gap-1.5">
                 {rs.map((r) => {

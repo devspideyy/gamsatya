@@ -4,6 +4,7 @@ import { useSim } from "./SimProvider";
 import { villageById } from "@/lib/data";
 import { downloadCsv, today } from "@/lib/csv";
 import type { Incident, Stage } from "@/lib/types";
+import { L } from "@/lib/phrases";
 
 const STAGES: { key: Stage; en: string; bn: string }[] = [
   { key: "watch", en: "Watch", bn: "নজর" },
@@ -48,11 +49,11 @@ export default function IncidentBoard({ villageFilter }: { villageFilter?: strin
   return (
     <section className="panel mb-8 p-5 md:p-7" aria-labelledby="inc-h">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h2 id="inc-h" className="text-[26px]">Incidents</h2>
-        {list.length > 0 && <button className="btn btn-ghost" onClick={exportLog}>Download incident log (CSV)</button>}
+        <h2 id="inc-h" className="text-[26px]">{L("Incidents")}</h2>
+        {list.length > 0 && <button className="btn btn-ghost" onClick={exportLog}>{L("Download incident log (CSV)")}</button>}
       </div>
       {list.length === 0 ? (
-        <p className="mt-2 text-[var(--slate)]">No incidents. Open the demo console and run Flood or Fire to see the four stages fill in.</p>
+        <p className="mt-2 text-[var(--slate)]">{L("No incidents. Open the demo console and run Flood or Fire to see the four stages fill in.")}</p>
       ) : (
         <ul className="mt-2">
           {list.slice(0, 4).map((inc) => (
@@ -60,7 +61,7 @@ export default function IncidentBoard({ villageFilter }: { villageFilter?: strin
               <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
                 <p className="text-[18px] font-semibold">{inc.kind} in {villageById(inc.villageId)?.name}</p>
                 <p className="text-[14px] text-[var(--slate)]">
-                  Watch to emergency <b className="num text-[var(--ink)]">{secs(inc.stages.watch, inc.stages.emergency)}</b>
+                  {L("Watch to emergency")} <b className="num text-[var(--ink)]">{secs(inc.stages.watch, inc.stages.emergency)}</b>
                   {inc.responder && <>, {inc.responder.team} assigned</>}
                 </p>
               </div>

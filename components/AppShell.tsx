@@ -8,6 +8,7 @@ import { VILLAGES } from "@/lib/data";
 import { LANG_NAME, type DictKey } from "@/lib/i18n";
 import DemoConsole from "./DemoConsole";
 import type { Role } from "@/lib/types";
+import { L, villageName } from "@/lib/phrases";
 
 /** One stroke icon family (1.8px, round joins) used for every nav item */
 const ICON: Record<string, string> = {
@@ -96,7 +97,7 @@ export function Wordmark({ light = false }: { light?: boolean; compact?: boolean
 export function LangToggle({ light = false }: { light?: boolean }) {
   const { lang, setLang } = useSim();
   return (
-    <select aria-label="Language" value={lang} onChange={(e) => setLang(e.target.value as typeof lang)}
+    <select aria-label={L("Language")} value={lang} onChange={(e) => setLang(e.target.value as typeof lang)}
       className={`min-h-[44px] rounded-md bg-transparent px-1.5 text-[15px] font-semibold [&>option]:bg-[var(--card)] [&>option]:text-[var(--ink)] ${light ? "text-[#f6f0e3] hover:bg-white/10" : "text-[var(--ink)] hover:bg-[var(--line-soft)]"}`}>
       {(Object.keys(LANG_NAME) as (keyof typeof LANG_NAME)[]).map((l) => <option key={l} value={l}>{LANG_NAME[l]}</option>)}
     </select>
@@ -114,7 +115,7 @@ export function SiteFooter() {
         <input type="checkbox" checked={lowData} onChange={(e) => setLowData(e.target.checked)} className="h-4 w-4 accent-[var(--ink)]" />
         {t("lowData")}: no map tiles, lighter pages
       </label>
-      <p className="w-full text-[13px] text-[var(--slate)]">Prototype for the BharatSeva state hackathon. All village data is simulated.</p>
+      <p className="w-full text-[13px] text-[var(--slate)]">{L("Prototype for the BharatSeva state hackathon. All village data is simulated.")}</p>
     </footer>
   );
 }
@@ -136,7 +137,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-dvh">
-      <a href="#main" className="skip-link">Skip to content</a>
+      <a href="#main" className="skip-link">{L("Skip to content")}</a>
       <header className="laal-paar sticky top-0 z-[600] bg-[var(--ink)] text-[#f6f0e3]">
         <div className="mx-auto flex max-w-[1180px] items-center gap-6 px-4 md:px-6">
           <Wordmark light />
@@ -154,9 +155,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </nav>
           <div className="ml-auto flex items-center gap-1">
             {showVillage && (
-              <select aria-label="Village" value={villageId} onChange={(e) => setVillageId(e.target.value)}
+              <select aria-label={L("Village")} value={villageId} onChange={(e) => setVillageId(e.target.value)}
                 className="min-h-[44px] w-[136px] rounded-md bg-transparent px-1.5 text-[15px] font-semibold text-[#f6f0e3] hover:bg-white/10 md:w-[180px] [&>option]:bg-[var(--card)] [&>option]:text-[var(--ink)]">
-                {VILLAGES.map((v) => <option key={v.id} value={v.id}>{lang === "bn" ? v.nameBn : v.name}</option>)}
+                {VILLAGES.map((v) => <option key={v.id} value={v.id}>{villageName(v, lang)}</option>)}
               </select>
             )}
             <LangToggle light />

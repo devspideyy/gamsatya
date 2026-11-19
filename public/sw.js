@@ -1,5 +1,5 @@
 // GramSatya service worker: app shell offline, map tiles cached as you browse.
-const VERSION = "gramsatya-v1";
+const VERSION = "gramsatya-v2";
 const SHELL = ["/", "/dashboard", "/reports", "/alerts", "/assets", "/ledger", "/funds", "/devices", "/manifest.webmanifest", "/icon-192.png"];
 
 self.addEventListener("install", (event) => {

@@ -8,6 +8,7 @@ import { useSim } from "@/components/SimProvider";
 import { ASSETS, SENSORS, villageById } from "@/lib/data";
 import { assetStatus } from "@/lib/sim";
 import { timeAgo } from "@/components/ui";
+import { L } from "@/lib/phrases";
 
 async function compress(file: File): Promise<string> {
   const url = URL.createObjectURL(file);
@@ -37,8 +38,8 @@ export default function AssetRecord() {
   if (!sensor && !pond) {
     return (
       <div>
-        <h1 className="text-[34px]">No asset with this tag</h1>
-        <p className="mt-2 text-[var(--slate)]">The QR code may be damaged. Ask the panchayat office for the asset number.</p>
+        <h1 className="text-[34px]">{L("No asset with this tag")}</h1>
+        <p className="mt-2 text-[var(--slate)]">{L("The QR code may be damaged. Ask the panchayat office for the asset number.")}</p>
       </div>
     );
   }
@@ -66,7 +67,7 @@ export default function AssetRecord() {
 
   return (
     <div>
-      <p className="text-[14px] text-[var(--slate)]">Asset record. Anyone who scans the tag on this asset lands here.</p>
+      <p className="text-[14px] text-[var(--slate)]">{L("Asset record. Anyone who scans the tag on this asset lands here.")}</p>
       <div className="mt-2 flex flex-wrap items-start justify-between gap-6">
         <div>
           <h1 className="text-[40px] leading-tight">{sensor ? sensor.label : pond!.name}</h1>
@@ -84,15 +85,15 @@ export default function AssetRecord() {
 
       <div className="mt-8 grid gap-6 md:grid-cols-2">
         <section className="panel p-5" aria-labelledby="chain-h">
-          <h2 id="chain-h" className="text-[24px]">Signed readings</h2>
+          <h2 id="chain-h" className="text-[24px]">{L("Signed readings")}</h2>
           {sensor ? (
             <>
-              <button className="btn btn-ghost mt-3" onClick={() => { setChecking(true); setTimeout(() => setChecking(false), 600); }}>Verify chain</button>
+              <button className="btn btn-ghost mt-3" onClick={() => { setChecking(true); setTimeout(() => setChecking(false), 600); }}>{L("Verify chain")}</button>
               <p className="mt-2 text-[15px] font-semibold" style={{ color: brokenHere ? "var(--sindoor)" : verify.ok ? "var(--paddy)" : "#7d5208" }} aria-live="polite">
                 {checking ? "Checking…" : brokenHere ? "A past reading of this sensor was edited. Chain broken here." : verify.ok ? `All ${verify.checked} records in the chain are valid.` : `Chain broken elsewhere, at record ${verify.brokenAt}.`}
               </p>
               <ul className="mt-3 text-[14px]">
-                {records.length === 0 && <li className="text-[var(--slate)]">No recent records for this sensor in the ledger window.</li>}
+                {records.length === 0 && <li className="text-[var(--slate)]">{L("No recent records for this sensor in the ledger window.")}</li>}
                 {records.map((r) => (
                   <li key={r.i} className="flex justify-between gap-3 border-t border-[var(--line-soft)] py-1.5">
                     <span className="num">{r.value.toFixed(2)}{r.edited ? " (edited)" : ""}</span>
@@ -114,8 +115,8 @@ export default function AssetRecord() {
         </section>
 
         <section className="panel p-5" aria-labelledby="photo-h">
-          <h2 id="photo-h" className="text-[24px]">Photo check</h2>
-          <p className="mt-1 text-[15px] text-[var(--slate)]">A villager can add a photo with location. It backs up or questions what the sensor says.</p>
+          <h2 id="photo-h" className="text-[24px]">{L("Photo check")}</h2>
+          <p className="mt-1 text-[15px] text-[var(--slate)]">{L("A villager can add a photo with location. It backs up or questions what the sensor says.")}</p>
           {photo ? (
             <div className="mt-3">
               {/* eslint-disable-next-line @next/next/no-img-element */}

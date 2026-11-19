@@ -7,6 +7,7 @@ import { PageHeader, rupees, ScoreText } from "@/components/ui";
 import { VILLAGES } from "@/lib/data";
 import { downloadCsv, today } from "@/lib/csv";
 import MapView from "@/components/MapView";
+import { L } from "@/lib/phrases";
 
 const TRUST_LINE = 70;
 const HOLD_SHARE = 0.3;
@@ -36,8 +37,8 @@ export default function FundsPage() {
   return (
     <div>
       <PageHeader
-        title="Where should the next rupee go?"
-        lede="Villages are ranked by verified need. If a village's data trust is below 70%, part of its money waits until a field check confirms the data."
+        title={L("Where should the next rupee go?")}
+        lede={L("Villages are ranked by verified need. If a village's data trust is below 70%, part of its money waits until a field check confirms the data.")}
       >
         <button className="btn btn-ghost" onClick={() => downloadCsv(`gramsatya-csr-report-${today()}.csv`, [
           ["Rank", "Village", "Population", "Score", "Data trust %", "Suggested amount (Rs)", "Release now (Rs)", "Held until verified (Rs)", "Sensor faults", "Ponds failing"],
@@ -45,13 +46,13 @@ export default function FundsPage() {
             const now = r.hold ? r.amount * (1 - HOLD_SHARE) : r.amount;
             return [i + 1, r.s.village.name, r.s.village.population, r.s.score, r.trust, Math.round(r.amount), Math.round(now), Math.round(r.amount - now), r.s.faults.length, r.s.assets.filter((a) => a.status !== "Working").length];
           }),
-        ])}>Download CSR report (CSV)</button>
+        ])}>{L("Download CSR report (CSV)")}</button>
       </PageHeader>
 
       <div className="grid gap-x-12 gap-y-10 lg:grid-cols-[320px_1fr]">
         <section aria-labelledby="formula" className="lg:sticky lg:top-24 lg:self-start">
           <h2 id="formula" className="sr-only">Budget and formula</h2>
-          <label className="block text-[14px] text-[var(--slate)]" htmlFor="budget">Budget to allocate</label>
+          <label className="block text-[14px] text-[var(--slate)]" htmlFor="budget">{L("Budget to allocate")}</label>
           <p className="num text-[40px] font-bold leading-tight">{rupees(budget)}</p>
           <input id="budget" type="range" min={1_000_000} max={50_000_000} step={500_000} value={budget} onChange={(e) => setBudget(Number(e.target.value))} className="w-full accent-[var(--ink)]" />
           <div className="flex justify-between text-[12px] text-[var(--slate)]"><span>₹10 L</span><span>₹5 Cr</span></div>
@@ -72,10 +73,10 @@ export default function FundsPage() {
             ))}
           </div>
           <p className="border-t border-[var(--line)] pt-4 text-[14px] text-[var(--slate)]">
-            On hold until data is checked: <b className="num text-[#7d5208]">{rupees(Math.round(held))}</b>
+            {L("On hold until data is checked:")} <b className="num text-[#7d5208]">{rupees(Math.round(held))}</b>
           </p>
           <div className="mt-6 border-t border-[var(--line)] pt-4">
-            <p className="mb-2 font-semibold">Where the money goes</p>
+            <p className="mb-2 font-semibold">{L("Where the money goes")}</p>
             <MapView height={280} points={ranked.map((r) => ({
               lat: r.s.village.lat, lng: r.s.village.lng,
               radius: 7 + Math.round((r.amount / budget) * 40),
@@ -84,7 +85,7 @@ export default function FundsPage() {
               label: `${r.s.village.name}: ${rupees(Math.round(r.amount))}${r.hold ? ", part held" : ""}`,
               href: `/village/${r.s.village.id}`,
             }))} />
-            <p className="mt-2 text-[13px] text-[var(--slate)]">Bigger circle, bigger share. Ringed villages have money on hold.</p>
+            <p className="mt-2 text-[13px] text-[var(--slate)]">{L("Bigger circle, bigger share. Ringed villages have money on hold.")}</p>
           </div>
         </section>
 
@@ -100,7 +101,7 @@ export default function FundsPage() {
                   <div className="min-w-0">
                     <Link href={`/village/${r.s.village.id}`} className="text-[19px] font-semibold hover:underline">{r.s.village.name}</Link>
                     <p className="mt-0.5 text-[14px] text-[var(--slate)]">
-                      Score <ScoreText score={r.s.score} />, {r.s.village.risk > 0.7 ? "high" : r.s.village.risk > 0.4 ? "medium" : "low"} flood risk, {r.s.village.population.toLocaleString("en-IN")} people, data trust{" "}
+                      {L("Score")} <ScoreText score={r.s.score} />, {r.s.village.risk > 0.7 ? "high" : r.s.village.risk > 0.4 ? "medium" : "low"} flood risk, {r.s.village.population.toLocaleString("en-IN")} people, data trust{" "}
                       <b style={{ color: r.hold ? "#7d5208" : "var(--paddy)" }}>{r.trust}%</b>
                     </p>
                     <div className="mt-2.5 flex h-2 max-w-md overflow-hidden rounded-full bg-[#ebe2d0]" role="img"
@@ -114,7 +115,7 @@ export default function FundsPage() {
                     <p className="num text-[22px] font-bold">{rupees(Math.round(r.amount))}</p>
                     {r.hold
                       ? <p className="text-[13px] text-[#7d5208]">{rupees(Math.round(release))} now, {rupees(Math.round(r.amount - release))} held</p>
-                      : <p className="text-[13px] text-[var(--slate)]">Release in full</p>}
+                      : <p className="text-[13px] text-[var(--slate)]">{L("Release in full")}</p>}
                   </div>
                 </li>
               );

@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import { useSim } from "@/components/SimProvider";
 import { PageHeader, timeAgo } from "@/components/ui";
 import { VILLAGES, villageById } from "@/lib/data";
-import { noise } from "@/lib/sim";
+import SafetyMap from "@/components/SafetyMap";
 import type { Sos } from "@/lib/types";
+import { L } from "@/lib/phrases";
 
 function SosTimeline({ s, now }: { s: Sos; now: number }) {
   const { markSos } = useSim();
@@ -29,15 +30,12 @@ function SosTimeline({ s, now }: { s: Sos; now: number }) {
         })}
       </ol>
       <div className="mt-3 flex gap-2">
-        {s.status === "New" && <button className="btn btn-primary" onClick={() => markSos(s.id, "Help sent")}>Mark help sent</button>}
-        {s.status !== "Safe" && <button className="btn btn-ghost" onClick={() => markSos(s.id, "Safe")}>Mark safe</button>}
+        {s.status === "New" && <button className="btn btn-primary" onClick={() => markSos(s.id, "Help sent")}>{L("Mark help sent")}</button>}
+        {s.status !== "Safe" && <button className="btn btn-ghost" onClick={() => markSos(s.id, "Safe")}>{L("Mark safe")}</button>}
       </div>
     </li>
   );
 }
-
-// 6 x 6 grid of aggregated, synthetic safety-report counts. No names or exact places, small counts hidden.
-const GRID = Array.from({ length: 36 }, (_, i) => Math.floor(noise("safety-cell", i) ** 2 * 11));
 
 const ROUTES = [
   { villageId: "radhaganj", name: "School to bus stand", lights: [1, 2, 3] },
@@ -45,6 +43,9 @@ const ROUTES = [
   { villageId: "kusumpur", name: "Ghat to temple road", lights: [5, 6] },
   { villageId: "haripur-char", name: "Embankment path to shelter", lights: [1, 2, 3, 4] },
   { villageId: "dakshin-mathabhanga", name: "Tube well lane to school", lights: [1, 4, 5] },
+  { villageId: "lahiripur", name: "Jetty to market", lights: [1, 3, 4] },
+  { villageId: "bijoynagar", name: "Bus stop to girls' hostel", lights: [2, 5, 6] },
+  { villageId: "sonagaon", name: "College road", lights: [2, 3, 4] },
 ];
 
 export default function SafetyPage() {
@@ -63,45 +64,33 @@ export default function SafetyPage() {
 
   return (
     <div>
-      <PageHeader title="Safety" lede="An SOS reaches help even without internet: it falls back to LoRa radio and SMS. Safety data is shown only as area counts, never names or exact locations." />
+      <PageHeader title={L("Safety")} lede={L("An SOS reaches help even without internet: it falls back to LoRa radio and SMS. Safety data is shown only as area counts, never names or exact locations.")} />
 
       <section className="panel p-5 md:p-7" aria-labelledby="sos-h">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <h2 id="sos-h" className="text-[26px]">SOS</h2>
           <div className="flex flex-wrap gap-2">
             {role !== "citizen" && (
-              <select className="field !w-auto" value={sosVillage} onChange={(e) => setSosVillage(e.target.value)} aria-label="Village sending the SOS">
+              <select className="field !w-auto" value={sosVillage} onChange={(e) => setSosVillage(e.target.value)} aria-label={L("Village sending the SOS")}>
                 {VILLAGES.map((v) => <option key={v.id} value={v.id}>{v.name} ({v.network})</option>)}
               </select>
             )}
-            <button className="btn btn-danger" onClick={() => sendSos(sosVillage, "Woman alone on the embankment road, being followed.")}>Send a test SOS</button>
+            <button className="btn btn-danger" onClick={() => sendSos(sosVillage, "Woman alone on the embankment road, being followed.")}>{L("Send a test SOS")}</button>
           </div>
         </div>
         {visible.length === 0 ? (
-          <p className="mt-3 text-[var(--slate)]">No SOS yet. Send a test from a 2G village to see the fallback path.</p>
+          <p className="mt-3 text-[var(--slate)]">{L("No SOS yet. Send a test from a 2G village to see the fallback path.")}</p>
         ) : (
           <ul className="mt-2">{visible.slice(0, 5).map((s) => <SosTimeline key={s.id} s={s} now={now} />)}</ul>
         )}
       </section>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_1.1fr]">
-        <section className="panel p-5 md:p-7" aria-labelledby="grid-h">
-          <h2 id="grid-h" className="text-[24px]">Safety reports by area</h2>
-          <p className="mt-1 text-[14px] text-[var(--slate)]">Last 90 days, whole block, in about 1 km squares. Squares with fewer than 3 reports show as a dash so nobody can be identified. Sample data.</p>
-          <div className="mt-4 grid grid-cols-6 gap-1" role="table" aria-label="Safety report counts by area">
-            {GRID.map((c, i) => (
-              <div key={i} role="cell" className="num grid aspect-square place-items-center rounded-sm text-[13px] font-semibold"
-                style={{ background: c < 3 ? "#efe7d7" : `rgba(163,36,27,${0.15 + (c / 10) * 0.7})`, color: c >= 7 ? "#fff" : "var(--ink)" }}
-                aria-label={`Square ${String.fromCharCode(65 + Math.floor(i / 6))}${(i % 6) + 1}: ${c < 3 ? "fewer than 3" : c} reports`}>
-                {c < 3 ? "–" : c}
-              </div>
-            ))}
-          </div>
-        </section>
+      <SafetyMap />
 
+      <div className="mt-6 grid gap-6">
         <section className="panel p-5 md:p-7" aria-labelledby="routes-h">
-          <h2 id="routes-h" className="text-[24px]">Safe routes after dark</h2>
-          <p className="mt-1 text-[14px] text-[var(--slate)]">Each route is checked against the live streetlight sensors along it.</p>
+          <h2 id="routes-h" className="text-[24px]">{L("Safe routes after dark")}</h2>
+          <p className="mt-1 text-[14px] text-[var(--slate)]">{L("Each route is checked against the live streetlight sensors along it.")}</p>
           <ul className="mt-3">
             {ROUTES.map((r) => {
               const snap = snaps.find((s) => s.village.id === r.villageId);
@@ -124,8 +113,8 @@ export default function SafetyPage() {
 
       {officer && (
         <section className="panel mt-6 p-5 md:p-7" aria-labelledby="mod-h">
-          <h2 id="mod-h" className="text-[24px]">Moderation queue</h2>
-          <p className="mt-1 text-[14px] text-[var(--slate)]">Villager safety tags are checked before they count. Anything naming a person is rejected.</p>
+          <h2 id="mod-h" className="text-[24px]">{L("Moderation queue")}</h2>
+          <p className="mt-1 text-[14px] text-[var(--slate)]">{L("Villager safety tags are checked before they count. Anything naming a person is rejected.")}</p>
           <ul className="mt-3">
             {queue.map((q) => (
               <li key={q.id} className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--line-soft)] py-3 first:border-0">
@@ -135,8 +124,8 @@ export default function SafetyPage() {
                 </div>
                 {q.status === "Pending" ? (
                   <div className="flex gap-2">
-                    <button className="btn btn-primary" onClick={() => setQueue(queue.map((x) => (x.id === q.id ? { ...x, status: "Approved" } : x)))}>Approve</button>
-                    <button className="btn btn-ghost" onClick={() => setQueue(queue.map((x) => (x.id === q.id ? { ...x, status: "Rejected" } : x)))}>Reject</button>
+                    <button className="btn btn-primary" onClick={() => setQueue(queue.map((x) => (x.id === q.id ? { ...x, status: "Approved" } : x)))}>{L("Approve")}</button>
+                    <button className="btn btn-ghost" onClick={() => setQueue(queue.map((x) => (x.id === q.id ? { ...x, status: "Rejected" } : x)))}>{L("Reject")}</button>
                   </div>
                 ) : <span className="font-semibold" style={{ color: q.status === "Approved" ? "var(--paddy)" : "var(--sindoor)" }}>{q.status}</span>}
               </li>

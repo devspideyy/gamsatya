@@ -10,30 +10,39 @@ import SensorRegister from "./SensorRegister";
 import { CONFIDENCE_LABEL, CONFIDENCE_WEIGHT, history, INDICATOR_INFO, scoreBand, WEIGHTS } from "@/lib/sim";
 import type { Indicator } from "@/lib/data";
 import type { Declaration, VillageSnapshot } from "@/lib/sim";
+import { L, villageName } from "@/lib/phrases";
 
 function DeclarationForm({ snap, onDone }: { snap: VillageSnapshot; onDone: () => void }) {
   const { submitDeclaration } = useSim();
-  const [d, setD] = useState<Declaration>(snap.declared);
+  // Keep what the user types as text so the box can be cleared (a number state would snap back to 0)
+  const [d, setD] = useState<Record<keyof Declaration, string>>({
+    water: String(snap.declared.water), energy: String(snap.declared.energy), sanitation: String(snap.declared.sanitation),
+  });
+  const clamp = (v: string) => Math.max(0, Math.min(100, Math.round(Number(v) || 0)));
   const fields: [keyof Declaration, string][] = [["water", "Water supply working"], ["energy", "Streetlights working"], ["sanitation", "Waste bins cleared"]];
   return (
     <form className="mt-5 rounded-lg border border-[var(--line)] bg-[var(--paper)] p-4"
-      onSubmit={(e) => { e.preventDefault(); submitDeclaration(snap.village.id, d); onDone(); }}>
-      <p className="font-semibold">This month&apos;s declaration</p>
-      <p className="text-[14px] text-[var(--slate)]">Enter the figures you will report on the portal. GramSatya checks them against the sensors as soon as you submit.</p>
+      onSubmit={(e) => { e.preventDefault(); submitDeclaration(snap.village.id, { water: clamp(d.water), energy: clamp(d.energy), sanitation: clamp(d.sanitation) }); onDone(); }}>
+      <p className="font-semibold">{L("This month's declaration")}</p>
+      <p className="text-[14px] text-[var(--slate)]">{L("Enter the figures you will report on the portal. GramSatya checks them against the sensors as soon as you submit.")}</p>
       <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
         {fields.map(([k, label]) => (
           <label key={k} className="text-[14px] font-medium">{label}
             <span className="mt-1 flex items-center gap-1">
-              <input type="number" inputMode="numeric" min={0} max={100} name={k} autoComplete="off" required className="field num" value={d[k]}
-                onChange={(e) => setD({ ...d, [k]: Math.max(0, Math.min(100, Number(e.target.value))) })} />
+              <input type="text" inputMode="numeric" pattern="[0-9]*" maxLength={3} name={k} autoComplete="off" required className="field num" value={d[k]}
+                placeholder="0–100" onFocus={(e) => e.target.select()}
+                onChange={(e) => {
+                  const digits = e.target.value.replace(/\D/g, "").replace(/^0+(?=\d)/, "");
+                  setD({ ...d, [k]: digits === "" ? "" : String(Math.min(100, Number(digits))) });
+                }} />
               <span className="text-[var(--slate)]">%</span>
             </span>
           </label>
         ))}
       </div>
       <div className="mt-3 flex flex-wrap gap-2">
-        <button type="submit" className="btn btn-primary">Submit declaration</button>
-        <button type="button" className="btn btn-ghost" onClick={onDone}>Cancel</button>
+        <button type="submit" className="btn btn-primary">{L("Submit declaration")}</button>
+        <button type="button" className="btn btn-ghost" onClick={onDone}>{L("Cancel")}</button>
       </div>
     </form>
   );
@@ -54,9 +63,9 @@ function QrInline({ villageId, name }: { villageId: string; name: string }) {
       {/* eslint-disable-next-line @next/next/no-img-element */}
       {src ? <img src={src} alt={`QR code for ${name}'s public page`} width={112} height={112} /> : <div className="h-28 w-28 bg-[#f1eadc]" />}
       <div className="min-w-0 text-[14px]">
-        <p>Print this for the panchayat office wall. Villagers scan it to see this scorecard in Bengali, no login needed.</p>
+        <p>{L("Print this for the panchayat office wall. Villagers scan it to see this scorecard in Bengali, no login needed.")}</p>
         <p className="mt-1 truncate text-[13px] text-[var(--slate)]">{url}</p>
-        {src && <a href={src} download={`gramsatya-${villageId}-qr.png`} className="mt-2 inline-block font-semibold text-[var(--river)] hover:underline">Download QR code</a>}
+        {src && <a href={src} download={`gramsatya-${villageId}-qr.png`} className="mt-2 inline-block font-semibold text-[var(--river)] hover:underline">{L("Download QR code")}</a>}
       </div>
     </div>
   );
@@ -79,34 +88,34 @@ export default function VillageScorecard({ villageId, officer = false }: { villa
   const flagged = snap.mismatches.length > 0;
 
   const verdict = ledgerBroken
-    ? "Someone edited this village's past readings. Its data is no longer trusted."
+    ? L("Someone edited this village's past readings. Its data is no longer trusted.")
     : flagged
-      ? "The panchayat declares more than the sensors measure."
-      : `Declared figures match the sensors. Overall: ${scoreBand(snap.score).label.toLowerCase()}.`;
+      ? L("The panchayat declares more than the sensors measure.")
+      : `${L("Declared figures match the sensors.")} ${L(scoreBand(snap.score).label)}.`;
 
   return (
     <div>
-      {officer && <Link href="/dashboard" className="mb-4 inline-block text-[14px] font-semibold text-[var(--river)] hover:underline">All villages</Link>}
+      {officer && <Link href="/dashboard" className="mb-4 inline-block text-[14px] font-semibold text-[var(--river)] hover:underline">{L("All villages")}</Link>}
 
       <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3 pb-5">
         <div>
           <h1 className="text-[44px] leading-none md:text-[60px]">
-            {bn ? v.nameBn : v.name} <span className="text-[26px] text-[var(--brass)] md:text-[32px]" lang={bn ? "en" : "bn"}>{bn ? v.name : v.nameBn}</span>
+            {villageName(v, lang)} <span className="text-[26px] text-[var(--brass)] md:text-[32px]" lang={bn ? "en" : "bn"}>{bn ? v.name : v.nameBn}</span>
           </h1>
           <p className="mt-3 text-[15px] text-[var(--slate)]">
-            Gram Panchayat, {v.population.toLocaleString("en-IN")} people.{" "}
-            <span className="inline-flex items-center gap-1.5 whitespace-nowrap"><span className="live-dot" aria-hidden />Live at {new Date(now).toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit", second: "2-digit" })}</span>
+            {L("Gram Panchayat")}, {v.population.toLocaleString("en-IN")} {L("people")}.{" "}
+            <span className="inline-flex items-center gap-1.5 whitespace-nowrap"><span className="live-dot" aria-hidden />{L("Live at")} {new Date(now).toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit", second: "2-digit" })}</span>
           </p>
         </div>
         <div className="flex gap-2">
-          <Link href={`/v/${v.id}`} className="btn btn-ghost">Public page</Link>
-          <button className="btn btn-ghost" onClick={() => setShowQr(!showQr)} aria-expanded={showQr}>{showQr ? "Hide QR code" : "QR code"}</button>
+          <Link href={`/v/${v.id}`} className="btn btn-ghost">{L("Public page")}</Link>
+          <button className="btn btn-ghost" onClick={() => setShowQr(!showQr)} aria-expanded={showQr}>{showQr ? L("Hide QR code") : L("QR code")}</button>
         </div>
       </header>
       <div className="stitch" aria-hidden />
       {showQr && <QrInline villageId={v.id} name={v.name} />}
 
-      <section className="panel mt-8 grid items-start gap-x-10 gap-y-6 p-5 md:grid-cols-[200px_1fr] md:p-8" aria-label="Declared against measured">
+      <section className="panel mt-8 grid items-start gap-x-10 gap-y-6 p-5 md:grid-cols-[200px_1fr] md:p-8" aria-label={L("Declared against measured")}>
         <div className="flex justify-center md:block"><Seal score={snap.score} name={v.name} size={200} verified={!ledgerBroken} /></div>
         <div>
           <h2 className="max-w-[40rem] text-[26px] leading-snug md:text-[30px]" style={{ color: flagged || ledgerBroken ? "var(--sindoor)" : "var(--ink)" }} aria-live="polite">{verdict}</h2>
@@ -114,10 +123,10 @@ export default function VillageScorecard({ villageId, officer = false }: { villa
           <table className="mt-5 w-full text-[15px]">
             <thead>
               <tr className="text-left text-[13px] text-[var(--slate)]">
-                <th className="pb-2 font-medium">Indicator</th>
-                <th className="pb-2 text-right font-medium">Declared</th>
-                <th className="pb-2 text-right font-medium">Measured</th>
-                <th className="pb-2 pl-5 font-medium">Evidence</th>
+                <th className="pb-2 font-medium">{L("Indicator")}</th>
+                <th className="pb-2 text-right font-medium">{L("Declared")}</th>
+                <th className="pb-2 text-right font-medium">{L("Measured")}</th>
+                <th className="pb-2 pl-5 font-medium">{L("Evidence")}</th>
                 <th className="hidden w-[22%] pb-2 pl-6 font-medium sm:table-cell"><span className="sr-only">Comparison</span></th>
               </tr>
             </thead>
@@ -129,11 +138,11 @@ export default function VillageScorecard({ villageId, officer = false }: { villa
                 return (
                   <tr key={k} className="border-t border-[var(--line)]">
                     <td className="py-2.5">
-                      <span className="font-medium">{bn ? INDICATOR_INFO[k].labelBn : INDICATOR_INFO[k].label}</span>
-                      <span className="block text-[12px] text-[var(--slate)]">{INDICATOR_INFO[k].pai}</span>
+                      <span className="font-medium">{(bn ? INDICATOR_INFO[k].labelBn : L(INDICATOR_INFO[k].label))}</span>
+                      <span className="block text-[12px] text-[var(--slate)]">{L(INDICATOR_INFO[k].pai)}</span>
                     </td>
                     <td className="num py-2.5 text-right">
-                      {claimed === undefined ? <span className="text-[13px] text-[var(--slate)]">Not declared</span>
+                      {claimed === undefined ? <span className="text-[13px] text-[var(--slate)]">{L("Not declared")}</span>
                         : <span className={over ? "text-[var(--slate)] line-through decoration-[var(--sindoor)] decoration-2" : ""}>{claimed}%</span>}
                     </td>
                     <td className="num py-2.5 text-right text-[17px] font-bold" style={{ color: over ? "var(--sindoor)" : scoreBand(measured).color }}>{measured}%</td>
@@ -141,7 +150,7 @@ export default function VillageScorecard({ villageId, officer = false }: { villa
                       <span className="font-semibold" style={{ color: snap.confidence[k] === "sensor" ? "var(--paddy)" : snap.confidence[k] === "citizen" ? "var(--river)" : "#7d5208" }}>
                         {CONFIDENCE_LABEL[snap.confidence[k]][lang]}
                       </span>
-                      <span className="num block text-[12px] text-[var(--slate)]">{snap.points[k]} of {Math.round(WEIGHTS[k] * 100)} pts, counted at {Math.round(CONFIDENCE_WEIGHT[snap.confidence[k]] * 100)}%</span>
+                      <span className="num block text-[12px] text-[var(--slate)]">{snap.points[k]} / {Math.round(WEIGHTS[k] * 100)} {L("pts")}, {L("counted at")} {Math.round(CONFIDENCE_WEIGHT[snap.confidence[k]] * 100)}%</span>
                     </td>
                     <td className="hidden py-2.5 pl-6 sm:table-cell">
                       <div className="relative h-2.5 rounded-full bg-[#ebe2d0]" aria-hidden>
@@ -156,16 +165,16 @@ export default function VillageScorecard({ villageId, officer = false }: { villa
           </table>
 
           <p className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-[14px] text-[var(--slate)]">
-            <span>Data trust <b className="num" style={{ color: snap.trust >= 80 ? "var(--paddy)" : snap.trust >= 60 ? "var(--turmeric)" : "var(--sindoor)" }}>{snap.trust}%</b></span>
-            <span className="inline-flex items-center gap-2">{delta >= 0 ? "Up" : "Down"} <b className="num text-[var(--ink)]">{Math.abs(delta)}</b> points in 30 days <Sparkline values={trend} /></span>
+            <span>{L("Data trust")} <b className="num" style={{ color: snap.trust >= 80 ? "var(--paddy)" : snap.trust >= 60 ? "var(--turmeric)" : "var(--sindoor)" }}>{snap.trust}%</b></span>
+            <span className="inline-flex items-center gap-2">{delta >= 0 ? L("Up") : L("Down")} <b className="num text-[var(--ink)]">{Math.abs(delta)}</b> {L("points in 30 days")} <Sparkline values={trend} /></span>
             <span style={{ color: ledgerBroken ? "var(--sindoor)" : undefined }}>
-              {ledgerBroken ? <Link href="/ledger" className="font-semibold underline">Ledger edited</Link> : "Ledger intact"}
+              {ledgerBroken ? <Link href="/ledger" className="font-semibold underline">{L("Ledger edited")}</Link> : L("Ledger intact")}
             </span>
-            <span className="hidden text-[13px] lg:inline"><span className="mr-1 inline-block h-3 w-[3px] translate-y-0.5 rounded bg-[var(--ink)]" />marks the declared figure</span>
+            <span className="hidden text-[13px] lg:inline"><span className="mr-1 inline-block h-3 w-[3px] translate-y-0.5 rounded bg-[var(--ink)]" />{L("marks the declared figure")}</span>
           </p>
           {role === "panchayat" && !officer && (declaring
             ? <DeclarationForm snap={snap} onDone={() => setDeclaring(false)} />
-            : <button className="btn btn-primary mt-5" onClick={() => setDeclaring(true)}>Submit this month&apos;s declaration</button>)}
+            : <button className="btn btn-primary mt-5" onClick={() => setDeclaring(true)}>{L("Submit this month's declaration")}</button>)}
         </div>
       </section>
 

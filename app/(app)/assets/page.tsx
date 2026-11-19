@@ -6,6 +6,7 @@ import MapView from "@/components/MapView";
 import { PageHeader, rupees } from "@/components/ui";
 import { ASSETS, villageById } from "@/lib/data";
 import { assetStatus, AssetStatus } from "@/lib/sim";
+import { L } from "@/lib/phrases";
 
 const STATUS_COLOR: Record<AssetStatus["status"], string> = { Working: "var(--river)", "At risk": "#7d5208", "Dried up": "var(--sindoor)" };
 const STATUS_HEX: Record<AssetStatus["status"], string> = { Working: "#1d5c78", "At risk": "#a06a0c", "Dried up": "#a3241b" };
@@ -48,20 +49,20 @@ export default function AssetsPage() {
   return (
     <div>
       <PageHeader
-        title="Did the money create something that lasts?"
-        lede={<>Water-level sensors on ponds and check dams built under MGNREGA and Amrit Sarovar. <b className="text-[var(--ink)]">{working.length} of {all.length}</b> still hold water. <b className="text-[var(--sindoor)]">{rupees(wasted)}</b> of {rupees(spent)} went into structures that are now dry or at risk.</>}
+        title={L("Did the money create something that lasts?")}
+        lede={<>{L("Water-level sensors on ponds and check dams built under MGNREGA and Amrit Sarovar.")} <b className="text-[var(--ink)]">{working.length} of {all.length}</b> still hold water. <b className="text-[var(--sindoor)]">{rupees(wasted)}</b> of {rupees(spent)} went into structures that are now dry or at risk.</>}
       />
 
       <div className="-mx-4 overflow-x-auto px-4 md:mx-0 md:px-0">
         <table className="w-full min-w-[820px] text-[15px]">
           <thead>
             <tr className="text-left text-[13px] text-[var(--slate)]">
-              <th className="pb-2 font-medium">Structure</th>
-              <th className="pb-2 font-medium">Now</th>
-              <th className="pb-2 font-medium">Last 12 months</th>
-              <th className="pb-2 text-right font-medium">Cost</th>
-              <th className="pb-2 text-right font-medium">Cost per month with water</th>
-              {officer && <th className="pb-2 pl-6 font-medium"><span className="sr-only">Social audit</span></th>}
+              <th className="pb-2 font-medium">{L("Structure")}</th>
+              <th className="pb-2 font-medium">{L("Now")}</th>
+              <th className="pb-2 font-medium">{L("Last 12 months")}</th>
+              <th className="pb-2 text-right font-medium">{L("Cost")}</th>
+              <th className="pb-2 text-right font-medium">{L("Cost per month with water")}</th>
+              {officer && <th className="pb-2 pl-6 font-medium"><span className="sr-only">{L("Social audit")}</span></th>}
             </tr>
           </thead>
           <tbody>
@@ -83,7 +84,7 @@ export default function AssetsPage() {
                     <span className="block text-[12px] text-[var(--slate)]">Water in {a.workingMonths} of 12 months</span>
                   </td>
                   <td className="num py-3 text-right">{rupees(a.asset.cost)}</td>
-                  <td className="num py-3 text-right font-semibold">{a.costPerWorkingMonth ? rupees(a.costPerWorkingMonth) : <span className="text-[var(--sindoor)]">Never held water</span>}</td>
+                  <td className="num py-3 text-right font-semibold">{a.costPerWorkingMonth ? rupees(a.costPerWorkingMonth) : <span className="text-[var(--sindoor)]">{L("Never held water")}</span>}</td>
                   {officer && (
                     <td className="py-3 pl-6 text-right">
                       <button onClick={() => toggleFlag(a.asset.id)} aria-pressed={isFlagged}
@@ -98,11 +99,11 @@ export default function AssetsPage() {
           </tbody>
         </table>
       </div>
-      <p className="mt-3 text-[13px] text-[var(--slate)]">Each bar is one month, December to November. Below the dashed line (25% full) the structure counts as dry.</p>
+      <p className="mt-3 text-[13px] text-[var(--slate)]">{L("Each bar is one month, December to November. Below the dashed line (25% full) the structure counts as dry.")}</p>
 
       {!own && (
         <section className="mt-10 border-t border-[var(--line)] pt-8" aria-labelledby="amap">
-          <h2 id="amap" className="mb-3 text-[24px]">Map</h2>
+          <h2 id="amap" className="mb-3 text-[24px]">{L("Map")}</h2>
           <MapView height={320} points={all.map((a) => ({
             lat: a.asset.lat, lng: a.asset.lng, radius: 10, color: STATUS_HEX[a.status],
             label: `${a.asset.name}: ${a.status}, ${a.current}% full`,

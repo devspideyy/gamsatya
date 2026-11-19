@@ -1,6 +1,7 @@
 "use client";
 
 import { scoreBand } from "@/lib/sim";
+import { L } from "@/lib/phrases";
 
 /** Rubber-stamp style seal showing the village score. The one bold element of the design. */
 export function Seal({ score, name, size = 168, verified = true }: { score: number; name: string; size?: number; verified?: boolean }) {
@@ -47,7 +48,7 @@ export function ScoreText({ score }: { score: number }) {
   return (
     <span className="whitespace-nowrap">
       <b className="num text-[17px]" style={{ color: b.color }}>{score}</b>
-      <span className="ml-1.5 text-[13px] text-[var(--slate)]">{b.label}</span>
+      <span className="ml-1.5 text-[13px] text-[var(--slate)]">{L(b.label)}</span>
     </span>
   );
 }

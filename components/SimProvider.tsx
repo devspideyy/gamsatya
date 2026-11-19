@@ -5,6 +5,7 @@ import { RIVER_DANGER_M, SENSORS, SIRENS_PER_VILLAGE, VILLAGES } from "@/lib/dat
 import { allSnapshots, Declaration, noise, VillageSnapshot } from "@/lib/sim";
 import { appendRecord, LedgerRecord, verifyChain, VerifyResult } from "@/lib/ledger";
 import { translate, DictKey } from "@/lib/i18n";
+import { L as phrase, setPhraseLang } from "@/lib/phrases";
 import {
   ALERT_TEMPLATES, AlertKind, CitizenReport, Incident, IncidentKind, Lang, ReportCategory, Role, Sos, SosStep, VillageAlert,
 } from "@/lib/types";
@@ -35,6 +36,8 @@ interface Ctx {
   lang: Lang;
   setLang: (l: Lang) => void;
   t: (k: DictKey) => string;
+  /** Translate an English UI phrase into the current language */
+  L: (en: string) => string;
   online: boolean;
   snaps: VillageSnapshot[];
   snapOf: (id: string) => VillageSnapshot;
@@ -170,6 +173,7 @@ export default function SimProvider({ children }: { children: React.ReactNode })
   }, []);
 
   useEffect(() => { if (mounted) save("gs.reports", reports); }, [reports, mounted]);
+  useEffect(() => { document.documentElement.lang = lang === "en" ? "en" : lang; }, [lang]);
   useEffect(() => { if (mounted) save("gs.alerts", alerts); }, [alerts, mounted]);
   useEffect(() => { if (mounted) save("gs.sos", sos); }, [sos, mounted]);
   useEffect(() => { if (mounted) save("gs.declarations", declarations); }, [declarations, mounted]);
@@ -366,6 +370,7 @@ export default function SimProvider({ children }: { children: React.ReactNode })
     sendAlert("Evacuate", [vid], "Manual", { en: "Fire near the haat. Keep away from the market area and let the fire tender through.", bn: "হাটের কাছে আগুন। বাজার এলাকা থেকে দূরে থাকুন, দমকলকে পথ দিন।" });
   }, [sendAlert]);
 
+  setPhraseLang(lang);
   const ctx: Ctx = {
     now,
     role,
@@ -375,6 +380,7 @@ export default function SimProvider({ children }: { children: React.ReactNode })
     lang,
     setLang: (l) => { setLangState(l); save("gs.lang", l); },
     t: (k) => translate(k, lang),
+    L: phrase,
     online,
     snaps,
     snapOf: (id) => snaps.find((s) => s.village.id === id) ?? snaps[0],
@@ -440,7 +446,7 @@ export default function SimProvider({ children }: { children: React.ReactNode })
   if (!mounted || !snaps.length) {
     return (
       <div className="grid min-h-dvh place-items-center text-[var(--slate)]">
-        <p>Loading village data…</p>
+        <p>{phrase("Loading village data…")}</p>
       </div>
     );
   }

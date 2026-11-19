@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { LangToggle, SiteFooter, Wordmark } from "@/components/AppShell";
 import { useSim } from "@/components/SimProvider";
+import { L } from "@/lib/phrases";
 
 export default function InfoLayout({ children }: { children: React.ReactNode }) {
   const { role } = useSim();
   return (
     <div className="min-h-dvh">
-      <a href="#main" className="skip-link">Skip to content</a>
+      <a href="#main" className="skip-link">{L("Skip to content")}</a>
       <header className="laal-paar bg-[var(--ink)]">
         <div className="mx-auto flex max-w-[1180px] items-center justify-between gap-4 px-4 py-2 md:px-6">
           <Wordmark light />

@@ -88,10 +88,10 @@ export const ALERT_TEMPLATES: Record<AlertKind, { en: string; bn: string }> = {
   },
 };
 
-export const CATEGORY_LABEL: Record<ReportCategory, { en: string; bn: string }> = {
-  handpump: { en: "Handpump not working", bn: "নলকূপ খারাপ" },
-  streetlight: { en: "Streetlight off", bn: "পথবাতি বন্ধ" },
-  bin: { en: "Garbage not collected", bn: "আবর্জনা জমে আছে" },
-  tank: { en: "No water supply", bn: "জল সরবরাহ নেই" },
-  other: { en: "Something else", bn: "অন্য সমস্যা" },
+export const CATEGORY_LABEL: Record<ReportCategory, { en: string; bn: string; hi: string }> = {
+  handpump: { en: "Handpump not working", bn: "নলকূপ খারাপ", hi: "हैंडपंप ख़राब" },
+  streetlight: { en: "Streetlight off", bn: "পথবাতি বন্ধ", hi: "स्ट्रीटलाइट बंद" },
+  bin: { en: "Garbage not collected", bn: "আবর্জনা জমে আছে", hi: "कूड़ा नहीं उठा" },
+  tank: { en: "No water supply", bn: "জল সরবরাহ নেই", hi: "पानी की आपूर्ति नहीं" },
+  other: { en: "Something else", bn: "অন্য সমস্যা", hi: "कोई और समस्या" },
 };

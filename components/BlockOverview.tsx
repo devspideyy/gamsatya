@@ -7,6 +7,7 @@ import MapView from "./MapView";
 import { PageHeader, ScoreText, Sparkline, TrustText } from "./ui";
 import { BLOCK_NAME, RIVER_DANGER_M, VILLAGES } from "@/lib/data";
 import { history, INDICATOR_INFO, scoreAt, scoreBand } from "@/lib/sim";
+import { L } from "@/lib/phrases";
 
 type SortKey = "score" | "trust" | "name";
 
@@ -69,11 +70,11 @@ export default function BlockOverview() {
         </>}
       >
         <label className="flex items-center gap-2 text-[14px] text-[var(--slate)]">
-          Sort
+          {L("Sort")}
           <select className="rounded-md border border-[var(--line)] bg-white px-2 py-1 text-[14px] text-[var(--ink)]" value={sort} onChange={(e) => setSort(e.target.value as SortKey)}>
-            <option value="score">Lowest score first</option>
-            <option value="trust">Lowest data trust first</option>
-            <option value="name">Name</option>
+            <option value="score">{L("Lowest score first")}</option>
+            <option value="trust">{L("Lowest data trust first")}</option>
+            <option value="name">{L("Name")}</option>
           </select>
         </label>
       </PageHeader>
@@ -82,12 +83,12 @@ export default function BlockOverview() {
         <table className="w-full min-w-[760px] text-[15px]">
           <thead>
             <tr className="text-left text-[13px] text-[var(--slate)]">
-              <th className="pb-2 font-medium">Village</th>
-              <th className="pb-2 font-medium">Score</th>
-              <th className="pb-2 font-medium">Declared against measured</th>
-              <th className="pb-2 font-medium">Data trust</th>
-              <th className="pb-2 pl-4 text-right font-medium">Sensor faults</th>
-              <th className="pb-2 pl-4 text-right font-medium">Open reports</th>
+              <th className="pb-2 font-medium">{L("Village")}</th>
+              <th className="pb-2 font-medium">{L("Score")}</th>
+              <th className="pb-2 font-medium">{L("Declared against measured")}</th>
+              <th className="pb-2 font-medium">{L("Data trust")}</th>
+              <th className="pb-2 pl-4 text-right font-medium">{L("Sensor faults")}</th>
+              <th className="pb-2 pl-4 text-right font-medium">{L("Open reports")}</th>
               <th className="pb-2 pl-6 font-medium">30 days</th>
             </tr>
           </thead>
@@ -102,7 +103,7 @@ export default function BlockOverview() {
                 <td className="py-3 pr-4 text-[14px]">
                   {s.mismatches.length
                     ? <span className="text-[var(--sindoor)]">{s.mismatches.map((m) => `${INDICATOR_INFO[m.indicator].label} ${m.claimed}% vs ${m.measured}%`).join(", ")}</span>
-                    : <span className="text-[var(--slate)]">Matches</span>}
+                    : <span className="text-[var(--slate)]">{L("Matches")}</span>}
                 </td>
                 <td className="py-3 pr-4"><TrustText trust={brokenVillage === s.village.id ? Math.min(s.trust, 60) : s.trust} /></td>
                 <td className="num py-3 pl-4 text-right">{s.faults.length}</td>
@@ -116,9 +117,9 @@ export default function BlockOverview() {
 
       <div className="mt-10 grid gap-x-10 gap-y-8 border-t border-[var(--line)] pt-8 lg:grid-cols-[1fr_1.1fr]">
         <section aria-labelledby="flags">
-          <h2 id="flags" className="text-[24px]">Needs review</h2>
+          <h2 id="flags" className="text-[24px]">{L("Needs review")}</h2>
           {flags.length === 0 ? (
-            <p className="mt-3 text-[var(--slate)]">Nothing needs review right now.</p>
+            <p className="mt-3 text-[var(--slate)]">{L("Nothing needs review right now.")}</p>
           ) : (
             <ul className="mt-2">
               {flags.map((f, i) => (
@@ -133,13 +134,13 @@ export default function BlockOverview() {
           )}
         </section>
         <section aria-labelledby="bmap">
-          <h2 id="bmap" className="mb-3 text-[24px]">Map</h2>
+          <h2 id="bmap" className="mb-3 text-[24px]">{L("Map")}</h2>
           <MapView points={points} height={300} />
           <label className="mt-3 block text-[14px]">
-            <span className="flex justify-between"><span className="font-semibold">Replay the last 72 hours</span><span className="num text-[var(--slate)]">{replay ? `${replay} h ago` : "Live"}</span></span>
-            <input type="range" min={0} max={72} step={3} value={replay} onChange={(e) => setReplay(Number(e.target.value))} className="w-full accent-[var(--ink)]" aria-label="Hours ago" />
+            <span className="flex justify-between"><span className="font-semibold">{L("Replay the last 72 hours")}</span><span className="num text-[var(--slate)]">{replay ? `${replay} h ago` : "Live"}</span></span>
+            <input type="range" min={0} max={72} step={3} value={replay} onChange={(e) => setReplay(Number(e.target.value))} className="w-full accent-[var(--ink)]" aria-label={L("Hours ago")} />
           </label>
-          <p className="mt-1 text-[13px] text-[var(--slate)]">Colour shows the score. A dark ring means the village&apos;s data needs checking.</p>
+          <p className="mt-1 text-[13px] text-[var(--slate)]">{L("Colour shows the score. A dark ring means the village's data needs checking.")}</p>
         </section>
       </div>
     </div>

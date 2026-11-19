@@ -6,6 +6,7 @@ import { useSim } from "@/components/SimProvider";
 import { PageHeader, ScoreText, TrustText } from "@/components/ui";
 import { downloadCsv, today } from "@/lib/csv";
 import { CONFIDENCE_LABEL } from "@/lib/sim";
+import { L } from "@/lib/phrases";
 
 type Level = "block" | "district" | "state";
 const ROW = 76;
@@ -57,11 +58,11 @@ export default function ScoreboardsPage() {
 
   return (
     <div>
-      <PageHeader title="Rankings" lede="Villages ranked on evidence, not on paperwork. Scores update live, so rows move when a flood hits or a fault is fixed.">
-        <button className="btn btn-ghost" onClick={exportRanking}>Download ranking (CSV)</button>
+      <PageHeader title={L("Rankings")} lede={L("Villages ranked on evidence, not on paperwork. Scores update live, so rows move when a flood hits or a fault is fixed.")}>
+        <button className="btn btn-ghost" onClick={exportRanking}>{L("Download ranking (CSV)")}</button>
       </PageHeader>
 
-      <div className="mb-5 flex gap-2" role="tablist" aria-label="Level">
+      <div className="mb-5 flex gap-2" role="tablist" aria-label={L("Level")}>
         {(["block", "district", "state"] as Level[]).map((l) => (
           <button key={l} role="tab" aria-selected={level === l} onClick={() => setLevel(l)}
             className={`min-h-[44px] rounded-full border px-4 text-[15px] font-semibold ${level === l ? "border-[var(--ink)] bg-[var(--ink)] text-[var(--card)]" : "border-[var(--line)] bg-[var(--card)]"}`}>
@@ -83,7 +84,7 @@ export default function ScoreboardsPage() {
                   <div className="min-w-0">
                     <Link href={`/village/${s.village.id}`} className="text-[17px] font-semibold hover:underline">{s.village.name}</Link>
                     <p className="truncate text-[13px] text-[var(--slate)]">
-                      Data trust <TrustText trust={s.trust} />
+                      {L("Data trust")} <TrustText trust={s.trust} />
                       {s.mismatches.length > 0 && <span className="text-[var(--sindoor)]">, declares more than measured</span>}
                       {declaredOnly.length > 0 && <span>, {declaredOnly.length} indicator{declaredOnly.length > 1 ? "s" : ""} {CONFIDENCE_LABEL[s.confidence[declaredOnly[0]]].en.toLowerCase()}</span>}
                     </p>
@@ -104,13 +105,13 @@ export default function ScoreboardsPage() {
               <ScoreText score={b.score} />
             </li>
           ))}
-          <li className="px-5 py-3 text-[13px] text-[var(--slate)]">Other blocks and districts use fixed demo figures. Only this block is live.</li>
+          <li className="px-5 py-3 text-[13px] text-[var(--slate)]">{L("Other blocks and districts use fixed demo figures. Only this block is live.")}</li>
         </ol>
       )}
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
         <section className="panel p-5 md:p-7" aria-labelledby="rules">
-          <h2 id="rules" className="text-[24px]">Rules that stop gaming</h2>
+          <h2 id="rules" className="text-[24px]">{L("Rules that stop gaming")}</h2>
           <dl className="mt-3">
             {RULES.map(([t, d]) => (
               <div key={t} className="border-t border-[var(--line-soft)] py-3 first:border-0">
@@ -121,8 +122,8 @@ export default function ScoreboardsPage() {
           </dl>
         </section>
         <section className="panel p-5 md:p-7" aria-labelledby="pts">
-          <h2 id="pts" className="text-[24px]">Citizen reporters</h2>
-          <p className="mt-1 text-[14px] text-[var(--slate)]">Only villagers who opt in appear here, under a code instead of a name.</p>
+          <h2 id="pts" className="text-[24px]">{L("Citizen reporters")}</h2>
+          <p className="mt-1 text-[14px] text-[var(--slate)]">{L("Only villagers who opt in appear here, under a code instead of a name.")}</p>
           <ol className="mt-3">
             {reporters.map(([who, p], i) => (
               <li key={who} className="flex items-center justify-between border-t border-[var(--line-soft)] py-2.5 first:border-0">

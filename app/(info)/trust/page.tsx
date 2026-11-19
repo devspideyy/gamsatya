@@ -1,4 +1,7 @@
+"use client";
+
 import { PageHeader } from "@/components/ui";
+import { L } from "@/lib/phrases";
 
 const BADGE = [
   ["Sensor verified", "The number came from an installed sensor, was signed by that device and is still in an unbroken chain."],
@@ -28,10 +31,10 @@ const LIMITS = [
 export default function TrustPage() {
   return (
     <div>
-      <PageHeader title="Trust and limits" lede="What a badge proves, how someone could try to fool the system, and what this prototype does not do yet." />
+      <PageHeader title={L("Trust and limits")} lede={L("What a badge proves, how someone could try to fool the system, and what this prototype does not do yet.")} />
 
       <section aria-labelledby="badges">
-        <h2 id="badges" className="text-[28px]">What each badge proves</h2>
+        <h2 id="badges" className="text-[28px]">{L("What each badge proves")}</h2>
         <dl className="mt-3">
           {BADGE.map(([t, d]) => (
             <div key={t} className="grid gap-1 border-t border-[var(--line)] py-3 sm:grid-cols-[200px_1fr]">
@@ -42,17 +45,17 @@ export default function TrustPage() {
       </section>
 
       <section className="mt-10" aria-labelledby="bypass">
-        <h2 id="bypass" className="text-[28px]">How someone might try to cheat</h2>
+        <h2 id="bypass" className="text-[28px]">{L("How someone might try to cheat")}</h2>
         <div className="-mx-4 mt-3 overflow-x-auto px-4">
           <table className="data-table min-w-[680px]">
-            <thead><tr><th>Attempt</th><th>What gives it away</th><th>Defence</th></tr></thead>
+            <thead><tr><th>{L("Attempt")}</th><th>{L("What gives it away")}</th><th>{L("Defence")}</th></tr></thead>
             <tbody>{BYPASS.map(([a, b, c]) => <tr key={a}><td className="font-semibold">{a}</td><td className="text-[14px]">{b}</td><td className="text-[14px] text-[var(--slate)]">{c}</td></tr>)}</tbody>
           </table>
         </div>
       </section>
 
       <section className="mt-10" aria-labelledby="limits" id="limitations">
-        <h2 id="limits" className="text-[28px]">Limitations</h2>
+        <h2 id="limits" className="text-[28px]">{L("Limitations")}</h2>
         <ul className="mt-3 list-disc space-y-2 pl-5 text-[16px]">
           {LIMITS.map((l) => <li key={l}>{l}</li>)}
         </ul>

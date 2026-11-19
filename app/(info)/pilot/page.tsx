@@ -1,4 +1,7 @@
+"use client";
+
 import { PageHeader } from "@/components/ui";
+import { L } from "@/lib/phrases";
 
 const BOM = [
   ["ESP32 dev board", "₹400–550"],
@@ -30,13 +33,13 @@ const METRICS = [
 export default function PilotPage() {
   return (
     <div>
-      <PageHeader title="Pilot plan" lede="A 16-week pilot in one coastal block, designed to prove whether sensor-verified data changes repairs, alerts and funding." />
+      <PageHeader title={L("Pilot plan")} lede="A 16-week pilot in one coastal block, designed to prove whether sensor-verified data changes repairs, alerts and funding." />
 
       <section aria-labelledby="cost">
-        <h2 id="cost" className="text-[28px]">What one sensor node costs</h2>
+        <h2 id="cost" className="text-[28px]">{L("What one sensor node costs")}</h2>
         <div className="-mx-4 mt-3 overflow-x-auto px-4">
           <table className="data-table min-w-[520px]">
-            <thead><tr><th>Part</th><th className="text-right">Approx. price</th></tr></thead>
+            <thead><tr><th>{L("Part")}</th><th className="text-right">{L("Approx. price")}</th></tr></thead>
             <tbody>
               {BOM.map(([p, c]) => <tr key={p}><td>{p}</td><td className="num text-right">{c}</td></tr>)}
               <tr><td className="font-semibold">Typical node (controller, 1–2 sensors, radio, solar)</td><td className="num text-right font-semibold">₹2,000–3,000</td></tr>
@@ -47,7 +50,7 @@ export default function PilotPage() {
       </section>
 
       <section className="mt-10" aria-labelledby="plan">
-        <h2 id="plan" className="text-[28px]">Sixteen weeks</h2>
+        <h2 id="plan" className="text-[28px]">{L("Sixteen weeks")}</h2>
         <ol className="mt-3">
           {PLAN.map(([w, d]) => (
             <li key={w} className="grid gap-1 border-t border-[var(--line)] py-3 sm:grid-cols-[140px_1fr]">
@@ -58,7 +61,7 @@ export default function PilotPage() {
       </section>
 
       <section className="mt-10" aria-labelledby="impact" id="impact">
-        <h2 id="impact" className="text-[28px]">How we will know it worked</h2>
+        <h2 id="impact" className="text-[28px]">{L("How we will know it worked")}</h2>
         <p className="mt-2 text-[var(--slate)]">Before and after, and sensor villages against paper villages in the same block.</p>
         <dl className="mt-3">
           {METRICS.map(([m, t]) => (

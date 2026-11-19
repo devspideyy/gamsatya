@@ -7,6 +7,7 @@ import IncidentBoard from "@/components/IncidentBoard";
 import { RIVER_DANGER_M, VILLAGES, villageById } from "@/lib/data";
 import { speak } from "@/lib/speak";
 import { ALERT_TEMPLATES, AlertKind, VillageAlert } from "@/lib/types";
+import { L } from "@/lib/phrases";
 
 const KINDS: AlertKind[] = ["Cyclone", "Flood", "Heatwave", "Evacuate"];
 const KIND_BN: Record<AlertKind, string> = { Cyclone: "ঘূর্ণিঝড়", Flood: "বন্যা", Heatwave: "তাপপ্রবাহ", Evacuate: "সরে যান" };
@@ -68,7 +69,7 @@ function AlertCard({ a, big }: { a: VillageAlert; big?: boolean }) {
       <div className="mt-2.5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex gap-4 text-[14px] font-semibold text-[var(--river)]">
           <button className="hover:underline" onClick={() => setNote(speak(a.bn, "bn-IN").note ?? null)}>শুনুন</button>
-          <button className="hover:underline" onClick={() => speak(a.en, "en-IN")}>Listen in English</button>
+          <button className="hover:underline" onClick={() => speak(a.en, "en-IN")}>{L("Listen in English")}</button>
         </div>
         {!big && <DeliveryDots alert={a} />}
       </div>
@@ -88,25 +89,25 @@ function CitizenAlerts() {
 
   return (
     <div className="space-y-5">
-      <PageHeader title={bn ? "সতর্কবার্তা" : "Alerts for your village"} lede={bn ? `${v.nameBn}-এর জন্য পঞ্চায়েতের পাঠানো সতর্কবার্তা।` : `Warnings sent by the panchayat for ${v.name}. They also play on the village sirens, even without internet.`} />
+      <PageHeader title={bn ? "সতর্কবার্তা" : L("Alerts for your village")} lede={bn ? `${v.nameBn}-এর জন্য পঞ্চায়েতের পাঠানো সতর্কবার্তা।` : `Warnings sent by the panchayat for ${v.name}. They also play on the village sirens, even without internet.`} />
       <div className="grid gap-5 lg:grid-cols-[1.4fr_1fr]">
         <div className="space-y-3">
           {mine.length === 0 ? (
             <div className="border-t border-[var(--line)] pt-4">
-              <p className="text-[17px] font-semibold">{bn ? "এখন কোনো সতর্কবার্তা নেই।" : "No alerts right now."}</p>
-              <p className="mt-1 text-[var(--slate)]">{bn ? "ঝড় বা বন্যার খবর এলে এখানে দেখাবে এবং সাইরেনে বাজবে।" : "If a storm or flood is coming, the warning shows here and plays on the sirens."}</p>
+              <p className="text-[17px] font-semibold">{bn ? "এখন কোনো সতর্কবার্তা নেই।" : L("No alerts right now.")}</p>
+              <p className="mt-1 text-[var(--slate)]">{bn ? "ঝড় বা বন্যার খবর এলে এখানে দেখাবে এবং সাইরেনে বাজবে।" : L("If a storm or flood is coming, the warning shows here and plays on the sirens.")}</p>
             </div>
           ) : mine.map((a) => <AlertCard key={a.id} a={a} big />)}
         </div>
         <section className="rounded-lg bg-white p-5" aria-labelledby="sos-title">
-          <h2 id="sos-title" className="text-[19px]">{bn ? "বিপদে পড়েছেন?" : "Need help now?"}</h2>
-          <p className="mt-1 text-[14px] text-[var(--slate)]">{bn ? "পঞ্চায়েত অফিসে জরুরি বার্তা যাবে, নেটওয়ার্ক না থাকলেও রেডিওর মাধ্যমে।" : "Your SOS goes to the panchayat office, over radio if the mobile network is down."}</p>
+          <h2 id="sos-title" className="text-[19px]">{bn ? "বিপদে পড়েছেন?" : L("Need help now?")}</h2>
+          <p className="mt-1 text-[14px] text-[var(--slate)]">{bn ? "পঞ্চায়েত অফিসে জরুরি বার্তা যাবে, নেটওয়ার্ক না থাকলেও রেডিওর মাধ্যমে।" : L("Your SOS goes to the panchayat office, over radio if the mobile network is down.")}</p>
           <textarea className="field mt-3" rows={3} value={text} onChange={(e) => setText(e.target.value)}
-            placeholder={bn ? "কী হয়েছে? কোথায় আছেন? (না লিখলেও চলবে)" : "What happened and where are you? (optional)"} />
+            placeholder={bn ? "কী হয়েছে? কোথায় আছেন? (না লিখলেও চলবে)" : L("What happened and where are you? (optional)")} />
           <button className="btn btn-danger mt-3 w-full !py-3 text-[16px]" onClick={() => { sendSos(villageId, text || "SOS, no details"); setText(""); setSent(true); }}>
-            {bn ? "জরুরি সাহায্য চান" : "Send SOS"}
+            {bn ? "জরুরি সাহায্য চান" : L("Send SOS")}
           </button>
-          {sent && <p className="mt-3 rounded-md bg-[var(--paddy-tint)] p-3 text-[14px] text-[var(--paddy)]" role="status">{bn ? "আপনার বার্তা পঞ্চায়েতে পৌঁছেছে।" : "Your SOS reached the panchayat office."}</p>}
+          {sent && <p className="mt-3 rounded-md bg-[var(--paddy-tint)] p-3 text-[14px] text-[var(--paddy)]" role="status">{bn ? "আপনার বার্তা পঞ্চায়েতে পৌঁছেছে।" : L("Your SOS reached the panchayat office.")}</p>}
           {mySos.length > 0 && (
             <ul className="mt-4 space-y-1 text-[13px]">
               {mySos.slice(0, 4).map((s) => (
@@ -138,13 +139,13 @@ function OfficerAlerts() {
 
   return (
     <div className="space-y-5">
-      <PageHeader title="Disaster alerts" lede={`Bengali voice alerts travel to ${VILLAGES.length * 3} village sirens over LoRa radio, so they still work when mobile networks fail.`} />
+      <PageHeader title={L("Disaster alerts")} lede={`Bengali voice alerts travel to ${VILLAGES.length * 3} village sirens over LoRa radio, so they still work when mobile networks fail.`} />
       <IncidentBoard villageFilter={own ? villageId : undefined} />
 
       <div className="grid gap-x-12 gap-y-10 lg:grid-cols-[1fr_1.2fr]">
         <section aria-labelledby="gauges">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-            <h2 id="gauges" className="text-[24px]">River gauges</h2>
+            <h2 id="gauges" className="text-[24px]">{L("River gauges")}</h2>
             <button className={`btn !py-1.5 text-[13px] ${storm ? "btn-danger" : "btn-ghost"}`} onClick={() => setStorm(!storm)} aria-pressed={storm}>
               {storm ? "Stop storm simulation" : "Simulate storm surge"}
             </button>
@@ -154,13 +155,13 @@ function OfficerAlerts() {
           </div>
           <p className="mt-4 text-[13px] text-[var(--slate)]">
             When a gauge crosses {RIVER_DANGER_M} m, a flood warning goes out on its own, with no one needing to press a button.
-            {storm && <b className="text-[var(--sindoor)]"> Storm surge running: the water rises every 4 seconds and should cross the line in about 20 seconds.</b>}
+            {storm && <b className="text-[var(--sindoor)]"> {L("Storm surge running: the water rises every 4 seconds and should cross the line in about 20 seconds.")}</b>}
           </p>
         </section>
 
         <section className="rounded-lg bg-white p-5" aria-labelledby="compose">
-          <h2 id="compose" className="mb-3 text-[24px]">Send an alert</h2>
-          <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-4" role="radiogroup" aria-label="Alert type">
+          <h2 id="compose" className="mb-3 text-[24px]">{L("Send an alert")}</h2>
+          <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-4" role="radiogroup" aria-label={L("Alert type")}>
             {KINDS.map((k) => (
               <button key={k} role="radio" aria-checked={kind === k} onClick={() => setKind(k)}
                 className={`rounded-lg border px-2 py-2 text-left text-[14px] ${kind === k ? "border-[var(--ink)] bg-[var(--ink)] text-white" : "border-[var(--line)] bg-white"}`}>
@@ -171,7 +172,7 @@ function OfficerAlerts() {
           </div>
           {!own && (
             <fieldset className="mb-3">
-              <legend className="mb-1.5 text-[13px] text-[var(--slate)]">Send to</legend>
+              <legend className="mb-1.5 text-[13px] text-[var(--slate)]">{L("Send to")}</legend>
               <div className="flex flex-wrap gap-2">
                 {VILLAGES.map((v) => {
                   const on = targets.includes(v.id);
@@ -185,11 +186,11 @@ function OfficerAlerts() {
               </div>
             </fieldset>
           )}
-          <label className="block text-[13px] text-[var(--slate)]" htmlFor="bn-msg">Message in Bengali (you can edit it)</label>
+          <label className="block text-[13px] text-[var(--slate)]" htmlFor="bn-msg">{L("Message in Bengali (you can edit it)")}</label>
           <textarea id="bn-msg" lang="bn" className="field mt-1 text-[15px]" rows={3} value={bnText} onChange={(e) => setBnText(e.target.value)} />
           <p className="mt-1 text-[13px] text-[var(--slate)]">English: {ALERT_TEMPLATES[kind].en}</p>
           <div className="mt-3 flex flex-wrap gap-2">
-            <button className="btn btn-ghost" onClick={() => setNote(speak(bnText, "bn-IN").note ?? null)}>Listen first</button>
+            <button className="btn btn-ghost" onClick={() => setNote(speak(bnText, "bn-IN").note ?? null)}>{L("Listen first")}</button>
             <button className="btn btn-danger" disabled={!targets.length || !bnText.trim()}
               onClick={() => { sendAlert(kind, targets, "Manual", { bn: bnText, en: ALERT_TEMPLATES[kind].en }); speak(bnText, "bn-IN"); }}>
               Broadcast to {sirens} sirens
@@ -203,7 +204,7 @@ function OfficerAlerts() {
         <section aria-labelledby="log">
           <h2 id="log" className="text-[24px]">Sent alerts ({visibleAlerts.length})</h2>
           {visibleAlerts.length === 0 ? (
-            <p className="mt-3 text-[var(--slate)]">None yet. Send one above, or start the storm simulation and watch the river gauge send one by itself.</p>
+            <p className="mt-3 text-[var(--slate)]">{L("None yet. Send one above, or start the storm simulation and watch the river gauge send one by itself.")}</p>
           ) : (
             <div className="mt-2">{visibleAlerts.map((a) => <AlertCard key={a.id} a={a} />)}</div>
           )}
@@ -211,7 +212,7 @@ function OfficerAlerts() {
         <section aria-labelledby="sos-in">
           <h2 id="sos-in" className="mb-3 text-[24px]">SOS from villagers ({visibleSos.filter((s) => s.status === "New").length} new)</h2>
           {visibleSos.length === 0 ? (
-            <p className="text-[14px] text-[var(--slate)]">No SOS messages. Villagers can send one from the citizen view, even over radio.</p>
+            <p className="text-[14px] text-[var(--slate)]">{L("No SOS messages. Villagers can send one from the citizen view, even over radio.")}</p>
           ) : (
             <ul className="space-y-2">
               {visibleSos.map((s) => (
@@ -221,8 +222,8 @@ function OfficerAlerts() {
                   <div className="mt-2 flex items-center justify-between gap-2">
                     <span className="text-[12px] text-[var(--slate)]">{timeAgo(s.ts)}</span>
                     {s.status === "New" ? (
-                      <button className="btn btn-primary !py-1 text-[13px]" onClick={() => markSos(s.id)}>Mark help sent</button>
-                    ) : <span className="text-[13px] font-semibold text-[var(--paddy)]">Help sent</span>}
+                      <button className="btn btn-primary !py-1 text-[13px]" onClick={() => markSos(s.id)}>{L("Mark help sent")}</button>
+                    ) : <span className="text-[13px] font-semibold text-[var(--paddy)]">{L("Help sent")}</span>}
                   </div>
                 </li>
               ))}

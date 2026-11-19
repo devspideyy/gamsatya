@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/ui";
 import { SENSORS, VILLAGES, villageById } from "@/lib/data";
 import { sha256, payload } from "@/lib/ledger";
 import { downloadCsv, today } from "@/lib/csv";
+import { L } from "@/lib/phrases";
 
 function fmtValue(sensorId: string, value: number) {
   if (sensorId.includes("streetlight")) return value > 5 ? `On, ${value.toFixed(0)} W` : "Off";
@@ -35,8 +36,8 @@ export default function LedgerPage() {
   return (
     <div className="space-y-5">
       <PageHeader
-        title="Data ledger"
-        lede="Each device signs its readings, and every reading's fingerprint includes the one before it. Change one old number and the chain breaks, so nobody can quietly rewrite a village's history."
+        title={L("Data ledger")}
+        lede={L("Each device signs its readings, and every reading's fingerprint includes the one before it. Change one old number and the chain breaks, so nobody can quietly rewrite a village's history.")}
       />
 
       <section className="border-l-4 py-1 pl-5" style={{ borderColor: verify.ok ? "var(--paddy)" : "var(--sindoor)" }} aria-live="polite">
@@ -61,12 +62,12 @@ export default function LedgerPage() {
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            <button className="btn btn-ghost" onClick={reverify}>Verify again</button>
+            <button className="btn btn-ghost" onClick={reverify}>{L("Verify again")}</button>
             <button className="btn btn-ghost" onClick={() => downloadCsv(`gramsatya-ledger-audit-${today()}.csv`, [
               ["No.", "Time", "Village", "Sensor", "Value", "Source", "Previous fingerprint", "Fingerprint", "Check"],
               ...ledger.map((r) => [r.i, new Date(r.ts).toISOString(), r.villageId, r.sensorId, r.value.toFixed(2), r.source, r.prevHash, r.hash,
                 brokenAt !== undefined && r.i === brokenAt ? "MISMATCH" : brokenAt !== undefined && r.i > brokenAt ? "after edit" : "ok"]),
-            ])}>Download audit (CSV)</button>
+            ])}>{L("Download audit (CSV)")}</button>
             {!verify.ok && brokenAt !== undefined && (
               <button className="btn btn-ghost" onClick={() => {
                 setFilter("All");
@@ -78,9 +79,9 @@ export default function LedgerPage() {
               <button className="btn btn-danger" onClick={() => {
                 const r = tamper();
                 if (r) setLastAction(`Demo: changed ${SENSORS.find((s) => s.id === r.sensorId)?.label} in ${villageById(r.villageId)?.name} from "${fmtValue(r.sensorId, r.value)}" to look like it was working, without updating its fingerprint.`);
-              }}>Simulate tampering</button>
+              }}>{L("Simulate tampering")}</button>
             ) : (
-              <button className="btn btn-primary" onClick={() => { restoreLedger(); setLastAction("Restored from the copies held on each device and the block server."); }}>Restore from device copies</button>
+              <button className="btn btn-primary" onClick={() => { restoreLedger(); setLastAction("Restored from the copies held on each device and the block server."); }}>{L("Restore from device copies")}</button>
             )}
           </div>
         </div>
@@ -89,16 +90,16 @@ export default function LedgerPage() {
 
       <section className="mt-10" aria-labelledby="reg">
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-          <h2 id="reg" className="text-[24px]">Register, newest first</h2>
-          <select className="rounded-md border border-[var(--line)] bg-white px-2 py-1 text-[14px]" value={filter} onChange={(e) => setFilter(e.target.value)} aria-label="Filter by village">
-            <option value="All">All villages</option>
+          <h2 id="reg" className="text-[24px]">{L("Register, newest first")}</h2>
+          <select className="rounded-md border border-[var(--line)] bg-white px-2 py-1 text-[14px]" value={filter} onChange={(e) => setFilter(e.target.value)} aria-label={L("Filter by village")}>
+            <option value="All">{L("All villages")}</option>
             {VILLAGES.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
           </select>
         </div>
         <div className="-mx-4 overflow-x-auto px-4 md:mx-0 md:px-0">
           <table className="data-table min-w-[860px]">
             <thead>
-              <tr><th className="w-8" aria-label="Chain" /><th>No.</th><th>Time</th><th>Village</th><th>Sensor</th><th>Reading</th><th>Source</th><th>Fingerprint</th><th>Check</th></tr>
+              <tr><th className="w-8" aria-label="Chain" /><th>{L("No.")}</th><th>{L("Time")}</th><th>{L("Village")}</th><th>{L("Sensor")}</th><th>{L("Reading")}</th><th>{L("Source")}</th><th>{L("Fingerprint")}</th><th>{L("Check")}</th></tr>
             </thead>
             <tbody>
               {shownRows.map((r, idx) => {
@@ -116,13 +117,13 @@ export default function LedgerPage() {
                     <td>{villageById(r.villageId)?.name}</td>
                     <td className="whitespace-nowrap">{SENSORS.find((s) => s.id === r.sensorId)?.label}</td>
                     <td className="num whitespace-nowrap font-medium" style={{ color: bad ? "var(--sindoor)" : undefined }}>{fmtValue(r.sensorId, r.value)}{bad && " (edited)"}</td>
-                    <td className="whitespace-nowrap text-[13px]" style={{ color: r.source === "device" ? "var(--river)" : "var(--slate)" }}>{r.source === "device" ? <b>ESP32, signed</b> : "Simulated node"}</td>
+                    <td className="whitespace-nowrap text-[13px]" style={{ color: r.source === "device" ? "var(--river)" : "var(--slate)" }}>{r.source === "device" ? <b>{L("ESP32, signed")}</b> : "Simulated node"}</td>
                     <td className="whitespace-nowrap text-[13px]">
                       <code className="text-[var(--ink)]">{r.hash.slice(0, 12)}</code>
                       {bad && <span className="block text-[12px] text-[var(--sindoor)]">now computes to <code>{recomputed.slice(0, 12)}</code></span>}
                     </td>
                     <td className="whitespace-nowrap text-[13px]">
-                      {bad ? <span className="font-semibold text-[var(--sindoor)]">Fingerprint mismatch</span> : after ? <span className="text-[#7d5208]">Built on an edited record</span> : <span className="text-[var(--paddy)]">Verified</span>}
+                      {bad ? <span className="font-semibold text-[var(--sindoor)]">{L("Fingerprint mismatch")}</span> : after ? <span className="text-[#7d5208]">{L("Built on an edited record")}</span> : <span className="text-[var(--paddy)]">{L("Verified")}</span>}
                     </td>
                   </tr>
                 );
